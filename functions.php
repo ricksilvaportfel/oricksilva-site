@@ -222,10 +222,9 @@ function orick_fetch_quotes() {
     // ---------- ÍNDICES / ETFs — BATCH em 1 request ----------
     $stock_list = [
         'SMAL11' => 'Small Caps',
+        'GPUS11' => 'GPU / IA',
         'IVVB11' => 'S&P 500',
         'BOVA11' => 'Bovespa ETF',
-        'HASH11' => 'Cripto Index',
-        'PETR4'  => 'Petrobras',
     ];
     $stock_syms_qs = implode( ',', array_keys( $stock_list ) );
     $stock_url = orick_brapi_url( '/api/quote/' . rawurlencode( $stock_syms_qs ) );
@@ -280,6 +279,43 @@ function orick_fetch_quotes() {
     set_transient( $cache_key, $out, $empty ? MINUTE_IN_SECONDS : 5 * MINUTE_IN_SECONDS );
     return $out;
 }
+
+/**
+ * DEBUG: acesse oricksilva.com.br/?brapi_debug=1 logado como admin pra ver status de cada endpoint
+ */
+add_action( 'wp', function() {
+    if ( empty( $_GET['brapi_debug'] ) || ! current_user_can( 'manage_options' ) ) return;
+    delete_transient( 'orick_quotes_v5' );
+    header( 'Content-Type: text/plain; charset=utf-8' );
+    $args = [
+        'timeout' => 15,
+        'headers' => [
+            'Accept'        => 'application/json',
+            'Authorization' => 'Bearer ' . ORICK_BRAPI_TOKEN,
+        ],
+    ];
+    $tests = [
+        'IBOV'       => orick_brapi_url( '/api/quote/^BVSP', [ 'range' => '1mo', 'interval' => '1d' ] ),
+        'ETFs batch' => orick_brapi_url( '/api/quote/' . rawurlencode( 'SMAL11,GPUS11,IVVB11,BOVA11' ) ),
+        'ETF single' => orick_brapi_url( '/api/quote/IVVB11' ),
+        'Currency'   => orick_brapi_url( '/api/v2/currency', [ 'currency' => 'USD-BRL,EUR-BRL,GBP-BRL,JPY-BRL' ] ),
+        'Curr v1'    => orick_brapi_url( '/api/v1/currency', [ 'currency' => 'USD-BRL' ] ),
+    ];
+    foreach ( $tests as $label => $url ) {
+        $r = wp_remote_get( $url, $args );
+        echo "\n=== $label ===\n";
+        echo "URL: " . preg_replace( '/token=[^&]+/', 'token=***', $url ) . "\n";
+        if ( is_wp_error( $r ) ) {
+            echo "WP_ERROR: " . $r->get_error_message() . "\n";
+            continue;
+        }
+        $code = wp_remote_retrieve_response_code( $r );
+        $body = wp_remote_retrieve_body( $r );
+        echo "HTTP: $code\n";
+        echo "Body: " . substr( $body, 0, 500 ) . "\n";
+    }
+    exit;
+});
 
 /**
  * Sparkline SVG a partir de array de preços
