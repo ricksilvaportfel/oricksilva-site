@@ -241,32 +241,26 @@ function orick_fetch_quotes() {
         ];
     }
 
-    // ---------- MOEDAS (AwesomeAPI — grátis, sem token) ----------
+    // ---------- MOEDAS (brapi v1 moeda-a-moeda — plano free aceita 1 por vez) ----------
     $curr_list = [
         'USD-BRL' => 'Dólar',
         'EUR-BRL' => 'Euro',
         'GBP-BRL' => 'Libra',
         'JPY-BRL' => 'Iene',
     ];
-    // AwesomeAPI aceita múltiplos separados por vírgula: USD-BRL,EUR-BRL,GBP-BRL,JPY-BRL
-    $curr_url = 'https://economia.awesomeapi.com.br/json/last/' . rawurlencode( implode( ',', array_keys( $curr_list ) ) );
-    $cr = wp_remote_get( $curr_url, [ 'timeout' => 10, 'headers' => [ 'Accept' => 'application/json' ] ] );
-    if ( ! is_wp_error( $cr ) && wp_remote_retrieve_response_code( $cr ) === 200 ) {
+    foreach ( $curr_list as $pair => $label ) {
+        $u  = orick_brapi_url( '/api/v2/currency', [ 'currency' => $pair ] );
+        $cr = wp_remote_get( $u, $args );
+        if ( is_wp_error( $cr ) || wp_remote_retrieve_response_code( $cr ) !== 200 ) continue;
         $cd = json_decode( wp_remote_retrieve_body( $cr ), true );
-        if ( is_array( $cd ) ) {
-            // AwesomeAPI retorna chaves tipo "USDBRL" (sem hífen)
-            foreach ( $curr_list as $pair => $label ) {
-                $key = str_replace( '-', '', $pair ); // USD-BRL -> USDBRL
-                if ( empty( $cd[ $key ] ) ) continue;
-                $row = $cd[ $key ];
-                $out['currencies'][] = [
-                    'label' => $label,
-                    'code'  => $row['code'] ?? '',
-                    'price' => isset( $row['bid'] ) ? (float) $row['bid'] : null,
-                    'chg'   => isset( $row['pctChange'] ) ? (float) $row['pctChange'] : null,
-                ];
-            }
-        }
+        if ( empty( $cd['currency'][0] ) ) continue;
+        $row = $cd['currency'][0];
+        $out['currencies'][] = [
+            'label' => $label,
+            'code'  => $row['fromCurrency'] ?? explode( '-', $pair )[0],
+            'price' => isset( $row['bidPrice'] ) ? (float) $row['bidPrice'] : null,
+            'chg'   => isset( $row['bidVariation'] ) ? (float) $row['bidVariation'] : null,
+        ];
     }
 
     $empty = ( $out['ibov'] === null && empty( $out['stocks'] ) && empty( $out['currencies'] ) );
