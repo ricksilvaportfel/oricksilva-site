@@ -84,30 +84,26 @@ $right_q = orick_get_posts_by_tag( 'lateral-hero', 4 );
   </div>
 </section>
 
-<?php
-/* ---------- PAINEL DE MERCADO ----------
-   Plugar um plugin TradingView / Stock Ticker aqui via shortcode. */
-?>
+<?php /* ---------- PAINEL DE MERCADO (TradingView Ticker Tape) ---------- */ ?>
 <section class="os-market">
   <div class="os-wrap">
     <div class="os-sec-head" style="padding-top:0;">
       <h2 class="os-sec-title">Mercado agora</h2>
-      <a href="#" class="os-sec-link">Ver painel completo →</a>
+      <a href="https://br.tradingview.com/markets/" target="_blank" rel="noopener" class="os-sec-link">Ver painel completo →</a>
     </div>
     <div class="os-market-grid">
       <div class="os-panel" style="grid-column: 1 / -1;">
         <div class="os-panel-head">
           <div class="os-panel-title">Cotações em tempo real</div>
-          <span class="os-panel-badge">widget externo</span>
+          <span class="os-panel-badge">TradingView</span>
         </div>
-        <?php
-        // Substitua pelo shortcode do seu plugin de cotações. Exemplos:
-        // echo do_shortcode('[tradingview_widget]');
-        // echo do_shortcode('[stock_ticker symbols="^BVSP,USDBRL=X,EURBRL=X,BTC-USD"]');
-        echo '<div style="padding:40px;text-align:center;color:var(--text-mute);font-family:\'JetBrains Mono\',monospace;font-size:12px;">
-                [ Instalar plugin TradingView Widgets ou Stock Ticker e colar o shortcode em front-page.php — linha ~100 ]
-              </div>';
-        ?>
+        <div class="os-ticker-embed">
+          <script type="module" src="https://widgets.tradingview-widget.com/w/br/tv-ticker-tape.js"></script>
+          <tv-ticker-tape
+            symbols="BMFBOVESPA:IBOV,FX_IDC:USDBRL,FX_IDC:EURBRL,BMFBOVESPA:IVVB11,BMFBOVESPA:HASH11,BMFBOVESPA:GPUS11,BMFBOVESPA:SMLL11,BMFBOVESPA:BOVA11"
+            theme="dark"
+            transparent></tv-ticker-tape>
+        </div>
       </div>
     </div>
   </div>

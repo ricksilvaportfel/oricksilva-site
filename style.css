@@ -257,6 +257,8 @@ body.oricksilva button { font-family: inherit; cursor: pointer; border: none; ba
 .os-market { padding: 40px 0; border-bottom: 1px solid var(--hair); }
 .os-market-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 24px; }
 .os-panel { background: var(--bg-accent); border: 1px solid var(--hair); padding: 22px 24px; }
+.os-ticker-embed { margin: 0 -8px -4px; }
+.os-ticker-embed tv-ticker-tape { display: block; }
 .os-panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .os-panel-title { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 500; }
 .os-panel-badge {
