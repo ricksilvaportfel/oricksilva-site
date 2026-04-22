@@ -84,28 +84,45 @@ $right_q = orick_get_posts_by_tag( 'lateral-hero', 4 );
   </div>
 </section>
 
-<?php /* ---------- PAINEL DE MERCADO (TradingView Ticker Tape) ---------- */ ?>
+<?php /* ---------- PAINEL DE MERCADO (brapi.dev — dados reais, visual do mockup) ---------- */
+$orick_quotes = orick_fetch_quotes();
+?>
 <section class="os-market">
   <div class="os-wrap">
     <div class="os-sec-head" style="padding-top:0;">
       <h2 class="os-sec-title">Mercado agora</h2>
-      <a href="https://br.tradingview.com/markets/" target="_blank" rel="noopener" class="os-sec-link">Ver painel completo →</a>
+      <span class="os-sec-link" style="pointer-events:none;opacity:.7;">Atualizado a cada 5 min · fonte: brapi.dev</span>
     </div>
-    <div class="os-market-grid">
-      <div class="os-panel" style="grid-column: 1 / -1;">
-        <div class="os-panel-head">
-          <div class="os-panel-title">Cotações em tempo real</div>
-          <span class="os-panel-badge">TradingView</span>
-        </div>
-        <div class="os-ticker-embed">
-          <script type="module" src="https://widgets.tradingview-widget.com/w/br/tv-ticker-tape.js"></script>
-          <tv-ticker-tape
-            symbols="BMFBOVESPA:IBOV,FX_IDC:USDBRL,FX_IDC:EURBRL,BMFBOVESPA:IVVB11,BMFBOVESPA:HASH11,BMFBOVESPA:GPUS11,BMFBOVESPA:SMLL11,BMFBOVESPA:BOVA11"
-            theme="dark"
-            transparent></tv-ticker-tape>
-        </div>
+
+    <?php if ( empty( $orick_quotes ) ) : ?>
+      <div class="os-panel" style="padding:32px;text-align:center;color:var(--text-mute);font-family:'JetBrains Mono',monospace;font-size:12px;">
+        Cotações indisponíveis no momento. Tente recarregar em instantes.
       </div>
-    </div>
+    <?php else : ?>
+      <div class="os-quote-grid">
+        <?php foreach ( $orick_quotes as $q ) :
+          $is_up   = isset( $q['chg'] ) && $q['chg'] >= 0;
+          $chg_cls = $q['chg'] === null ? 'is-flat' : ( $is_up ? 'is-up' : 'is-down' );
+        ?>
+          <div class="os-quote">
+            <div class="os-quote-top">
+              <span class="os-quote-label"><?php echo esc_html( $q['label'] ); ?></span>
+              <span class="os-quote-sub"><?php echo esc_html( $q['sub'] ); ?></span>
+            </div>
+            <div class="os-quote-price">
+              <span class="os-quote-currency"><?php echo esc_html( $q['currency'] ); ?></span>
+              <?php echo esc_html( orick_fmt_price( $q['price'] ) ); ?>
+            </div>
+            <div class="os-quote-chg <?php echo esc_attr( $chg_cls ); ?>">
+              <?php echo esc_html( orick_fmt_chg( $q['chg'] ) ); ?>
+              <span class="os-quote-spark" aria-hidden="true">
+                <?php if ( $chg_cls === 'is-up' ) echo '▲'; elseif ( $chg_cls === 'is-down' ) echo '▼'; else echo '◆'; ?>
+              </span>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    <?php endif; ?>
   </div>
 </section>
 
