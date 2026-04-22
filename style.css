@@ -334,8 +334,8 @@ body.oricksilva .os-ibov-chg {
   border: 1px solid currentColor !important;
   line-height: 1 !important;
 }
-body.oricksilva .os-ibov-chg.is-up   { color: var(--accent) !important; }
-body.oricksilva .os-ibov-chg.is-down { color: #c94a3a !important; }
+body.oricksilva .os-ibov-chg.is-up   { color: #3fa66a !important; border-color: #3fa66a !important; }
+body.oricksilva .os-ibov-chg.is-down { color: #c94a3a !important; border-color: #c94a3a !important; }
 body.oricksilva .os-ibov-spark {
   margin: 0 -6px !important;
   border-bottom: 1px solid var(--hair) !important;
@@ -423,7 +423,7 @@ body.oricksilva .os-mkt-list-chg {
   min-width: 54px !important;
   text-align: right !important;
 }
-body.oricksilva .os-mkt-list-chg.is-up   { color: var(--accent) !important; }
+body.oricksilva .os-mkt-list-chg.is-up   { color: #3fa66a !important; }
 body.oricksilva .os-mkt-list-chg.is-down { color: #c94a3a !important; }
 
 body.oricksilva .os-mkt-foot {

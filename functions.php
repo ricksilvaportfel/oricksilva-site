@@ -289,16 +289,18 @@ add_action( 'wp', function() {
         ],
     ];
     $tests = [
-        'IBOV'       => orick_brapi_url( '/api/quote/^BVSP', [ 'range' => '1mo', 'interval' => '1d' ] ),
-        'ETFs batch' => orick_brapi_url( '/api/quote/' . rawurlencode( 'SMAL11,GPUS11,IVVB11,BOVA11' ) ),
-        'ETF single' => orick_brapi_url( '/api/quote/IVVB11' ),
-        'Currency'   => orick_brapi_url( '/api/v2/currency', [ 'currency' => 'USD-BRL,EUR-BRL,GBP-BRL,JPY-BRL' ] ),
-        'Curr v1'    => orick_brapi_url( '/api/v1/currency', [ 'currency' => 'USD-BRL' ] ),
+        'IBOV'         => [ 'url' => orick_brapi_url( '/api/quote/^BVSP', [ 'range' => '1mo', 'interval' => '1d' ] ), 'auth' => true ],
+        'ETF single'   => [ 'url' => orick_brapi_url( '/api/quote/IVVB11' ), 'auth' => true ],
+        'AwesomeAPI'   => [ 'url' => 'https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,GBP-BRL,JPY-BRL', 'auth' => false ],
+        'AwesomeAPI 1' => [ 'url' => 'https://economia.awesomeapi.com.br/json/last/USD-BRL', 'auth' => false ],
     ];
-    foreach ( $tests as $label => $url ) {
-        $r = wp_remote_get( $url, $args );
+    foreach ( $tests as $label => $t ) {
+        $req_args = $t['auth']
+            ? $args
+            : [ 'timeout' => 10, 'headers' => [ 'Accept' => 'application/json' ] ];
+        $r = wp_remote_get( $t['url'], $req_args );
         echo "\n=== $label ===\n";
-        echo "URL: " . preg_replace( '/token=[^&]+/', 'token=***', $url ) . "\n";
+        echo "URL: " . preg_replace( '/token=[^&]+/', 'token=***', $t['url'] ) . "\n";
         if ( is_wp_error( $r ) ) {
             echo "WP_ERROR: " . $r->get_error_message() . "\n";
             continue;

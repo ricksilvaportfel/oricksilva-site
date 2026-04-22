@@ -124,7 +124,7 @@ $orick_has_data = $orick_ibov || ! empty( $orick_stocks ) || ! empty( $orick_cur
             </span>
           </div>
           <div class="os-ibov-spark">
-            <?php echo orick_sparkline_svg( $orick_ibov['history'], 560, 110, $ibov_up ? '#A75232' : '#c94a3a' ); ?>
+            <?php echo orick_sparkline_svg( $orick_ibov['history'], 560, 110, $ibov_up ? '#3fa66a' : '#c94a3a' ); ?>
           </div>
           <div class="os-ibov-stats">
             <div><span>Abertura</span><strong><?php echo esc_html( orick_fmt_price( $orick_ibov['open'] ) ); ?></strong></div>
