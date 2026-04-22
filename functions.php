@@ -160,6 +160,109 @@ function orick_initials( $name ) {
 }
 
 /* =========================================================
+   8.5. VÍDEO — meta box "URL do YouTube" + helpers
+   ========================================================= */
+
+// Meta box nas telas de Post (na categoria videos, ou sempre visível)
+add_action( 'add_meta_boxes', function() {
+    add_meta_box(
+        'orick_video_meta',
+        '🎬 Vídeo (YouTube)',
+        function( $post ) {
+            $url    = get_post_meta( $post->ID, '_orick_video_url', true );
+            $dur    = get_post_meta( $post->ID, '_orick_video_duration', true );
+            $kicker = get_post_meta( $post->ID, '_orick_video_kicker', true );
+            wp_nonce_field( 'orick_video_meta', 'orick_video_meta_nonce' );
+            ?>
+            <p>
+              <label style="display:block;margin-bottom:4px;font-weight:600;">URL do vídeo no YouTube</label>
+              <input type="url" name="orick_video_url" value="<?php echo esc_attr( $url ); ?>"
+                     placeholder="https://www.youtube.com/watch?v=..." style="width:100%;">
+              <small style="color:#666;">Aceita youtube.com/watch?v=, youtu.be/ e shorts/. A thumb é puxada automaticamente.</small>
+            </p>
+            <p>
+              <label style="display:block;margin-bottom:4px;font-weight:600;">Duração exibida (opcional)</label>
+              <input type="text" name="orick_video_duration" value="<?php echo esc_attr( $dur ); ?>"
+                     placeholder="52:18 ou 1:02:45" style="width:120px;">
+              <small style="color:#666;">Formato livre. Aparece no canto da thumb.</small>
+            </p>
+            <p>
+              <label style="display:block;margin-bottom:4px;font-weight:600;">Rótulo / kicker (opcional)</label>
+              <input type="text" name="orick_video_kicker" value="<?php echo esc_attr( $kicker ); ?>"
+                     placeholder="MASTERCLASS, ENTREVISTA, etc." style="width:260px;">
+              <small style="color:#666;">Sobrescreve o nome da categoria acima do título.</small>
+            </p>
+            <?php
+        },
+        'post',
+        'normal',
+        'high'
+    );
+} );
+
+add_action( 'save_post', function( $post_id ) {
+    if ( ! isset( $_POST['orick_video_meta_nonce'] ) ) return;
+    if ( ! wp_verify_nonce( $_POST['orick_video_meta_nonce'], 'orick_video_meta' ) ) return;
+    if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
+    if ( ! current_user_can( 'edit_post', $post_id ) ) return;
+
+    foreach ( [ '_orick_video_url' => 'orick_video_url',
+                '_orick_video_duration' => 'orick_video_duration',
+                '_orick_video_kicker' => 'orick_video_kicker' ] as $meta => $field ) {
+        if ( isset( $_POST[ $field ] ) ) {
+            $val = sanitize_text_field( $_POST[ $field ] );
+            if ( $val === '' ) delete_post_meta( $post_id, $meta );
+            else update_post_meta( $post_id, $meta, $val );
+        }
+    }
+
+    // Limpa cache de oEmbed quando a URL mudou
+    delete_post_meta( $post_id, '_orick_video_yt_id' );
+} );
+
+/**
+ * Extrai o ID do YouTube de qualquer formato comum.
+ */
+function orick_youtube_id( $url ) {
+    if ( ! $url ) return '';
+    if ( preg_match( '~(?:youtube\.com/(?:watch\?v=|embed/|shorts/|v/)|youtu\.be/)([A-Za-z0-9_-]{11})~i', $url, $m ) ) {
+        return $m[1];
+    }
+    return '';
+}
+
+/**
+ * Retorna dados do vídeo pro post atual (ou $post_id):
+ * - id, url, watch_url, thumb (hq), duration, kicker
+ * - Se não houver URL do YouTube, usa the_post_thumbnail como fallback.
+ */
+function orick_video_data( $post_id = null ) {
+    $post_id = $post_id ?: get_the_ID();
+    $url     = get_post_meta( $post_id, '_orick_video_url', true );
+    $dur     = get_post_meta( $post_id, '_orick_video_duration', true );
+    $kicker  = get_post_meta( $post_id, '_orick_video_kicker', true );
+    $id      = orick_youtube_id( $url );
+
+    $thumb = '';
+    if ( $id ) {
+        // maxresdefault é 1280×720; se não existir, o próprio YT serve hqdefault
+        $thumb = "https://i.ytimg.com/vi/{$id}/maxresdefault.jpg";
+    } elseif ( has_post_thumbnail( $post_id ) ) {
+        $thumb = get_the_post_thumbnail_url( $post_id, 'large' );
+    }
+
+    return [
+        'id'        => $id,
+        'url'       => $url,
+        'watch_url' => $id ? "https://www.youtube.com/watch?v={$id}" : get_permalink( $post_id ),
+        'embed_url' => $id ? "https://www.youtube.com/embed/{$id}" : '',
+        'thumb'     => $thumb,
+        'duration'  => $dur,
+        'kicker'    => $kicker,
+    ];
+}
+
+/* =========================================================
    9. COTAÇÕES — brapi.dev (cache 5 min, token obrigatório)
    ========================================================= */
 

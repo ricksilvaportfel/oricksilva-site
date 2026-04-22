@@ -374,31 +374,47 @@ $podcast_q     = orick_get_posts_by_cat( 'podcast', 5 );
       <a href="<?php echo esc_url( home_url('/categoria/videos/') ); ?>" class="os-sec-link">Canal completo →</a>
     </div>
     <?php if ( $videos_q->have_posts() ) :
-      $videos_q->the_post(); ?>
-      <a class="os-video-big" href="<?php the_permalink(); ?>">
-        <?php if ( has_post_thumbnail() ) the_post_thumbnail( 'large' ); else echo '<div class="os-fallback"></div>'; ?>
+      $videos_q->the_post();
+      $v = orick_video_data( get_the_ID() ); ?>
+      <a class="os-video-big" href="<?php echo esc_url( $v['watch_url'] ); ?>" target="_blank" rel="noopener">
+        <?php if ( $v['thumb'] ) : ?>
+          <img src="<?php echo esc_url( $v['thumb'] ); ?>" alt="" loading="lazy">
+        <?php else : ?>
+          <div class="os-fallback"></div>
+        <?php endif; ?>
         <div class="os-play-circle"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div>
+        <?php if ( $v['duration'] ) : ?>
+          <span class="os-video-dur"><?php echo esc_html( $v['duration'] ); ?></span>
+        <?php endif; ?>
         <div class="os-caption">
-          <div class="os-card-cat">Vídeo</div>
+          <div class="os-card-cat"><?php echo esc_html( $v['kicker'] ?: 'Vídeo' ); ?></div>
           <div class="os-card-title" style="color:#fff;font-size:22px;margin-top:6px;"><?php the_title(); ?></div>
         </div>
       </a>
       <div class="os-video-list">
-        <?php while ( $videos_q->have_posts() ) : $videos_q->the_post(); ?>
-          <a class="os-video-item" href="<?php the_permalink(); ?>">
+        <?php while ( $videos_q->have_posts() ) : $videos_q->the_post();
+          $vi = orick_video_data( get_the_ID() ); ?>
+          <a class="os-video-item" href="<?php echo esc_url( $vi['watch_url'] ); ?>" target="_blank" rel="noopener">
             <div class="os-video-thumb">
-              <?php if ( has_post_thumbnail() ) the_post_thumbnail( 'thumbnail' ); else echo '<div class="os-fallback"></div>'; ?>
+              <?php if ( $vi['thumb'] ) : ?>
+                <img src="<?php echo esc_url( $vi['thumb'] ); ?>" alt="" loading="lazy">
+              <?php else : ?>
+                <div class="os-fallback"></div>
+              <?php endif; ?>
               <div class="os-mini-play"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div>
+              <?php if ( $vi['duration'] ) : ?>
+                <span class="os-video-dur-mini"><?php echo esc_html( $vi['duration'] ); ?></span>
+              <?php endif; ?>
             </div>
             <div>
-              <div class="os-card-cat" style="font-size:10px;">Episódio</div>
+              <div class="os-card-cat" style="font-size:10px;"><?php echo esc_html( $vi['kicker'] ?: 'Episódio' ); ?></div>
               <div class="os-card-title" style="font-size:15px;margin-top:3px;"><?php the_title(); ?></div>
             </div>
           </a>
         <?php endwhile; ?>
       </div>
     <?php else : ?>
-      <p style="color:var(--text-mute);font-size:12px;">Publique na categoria <code>videos</code>.</p>
+      <p style="color:var(--text-mute);font-size:12px;">Publique na categoria <code>videos</code> e preencha "URL do YouTube".</p>
     <?php endif; wp_reset_postdata(); ?>
   </div>
 
