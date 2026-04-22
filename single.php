@@ -99,20 +99,88 @@ get_header(); ?>
     </figure>
   <?php endif; ?>
 
-  <!-- Corpo do artigo -->
-  <div class="os-article-body os-wrap">
-    <?php the_content(); ?>
+  <!-- Corpo + Sidebar (layout com share lateral e sidebar sticky) -->
+  <div class="os-article-layout os-wrap">
 
-    <?php
-    // Tags do post (rodapé do corpo)
-    if ( ! empty( $tags ) ) : ?>
-      <div class="os-article-tags">
-        <span class="os-tags-label">Tags:</span>
-        <?php foreach ( $tags as $tag ) : ?>
-          <a href="<?php echo esc_url( get_tag_link( $tag->term_id ) ); ?>" class="os-tag-chip"><?php echo esc_html( $tag->name ); ?></a>
-        <?php endforeach; ?>
+    <!-- Share vertical sticky (desktop) -->
+    <aside class="os-share-rail" aria-label="Compartilhar">
+      <span class="os-share-rail-label">COMPARTILHAR</span>
+      <button type="button" class="os-share-btn" data-action="copy" title="Copiar link" aria-label="Copiar link">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"/></svg>
+      </button>
+      <a href="https://wa.me/?text=<?php echo rawurlencode( get_the_title() . ' ' . get_permalink() ); ?>" target="_blank" rel="noopener" class="os-share-btn" title="WhatsApp" aria-label="WhatsApp">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.47 14.38c-.3-.15-1.75-.87-2.02-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.08-.3-.15-1.25-.46-2.38-1.47-.88-.78-1.47-1.75-1.65-2.05-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.6-.92-2.2-.24-.58-.49-.5-.67-.51-.17-.01-.37-.01-.57-.01s-.52.07-.8.37c-.27.3-1.05 1.02-1.05 2.5s1.07 2.9 1.22 3.1c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.62.71.22 1.36.19 1.87.12.57-.08 1.75-.71 2-1.4.25-.7.25-1.29.17-1.4-.07-.12-.27-.2-.57-.35zM12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.92 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2z"/></svg>
+      </a>
+      <a href="https://twitter.com/intent/tweet?text=<?php echo rawurlencode( get_the_title() ); ?>&url=<?php echo rawurlencode( get_permalink() ); ?>" target="_blank" rel="noopener" class="os-share-btn" title="X" aria-label="X">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      </a>
+      <a href="https://www.linkedin.com/sharing/share-offsite/?url=<?php echo rawurlencode( get_permalink() ); ?>" target="_blank" rel="noopener" class="os-share-btn" title="LinkedIn" aria-label="LinkedIn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.95v5.66H9.35V9h3.42v1.56h.05c.48-.91 1.65-1.87 3.4-1.87 3.64 0 4.31 2.4 4.31 5.52v6.24zM5.34 7.43a2.07 2.07 0 1 1 0-4.14 2.07 2.07 0 0 1 0 4.14zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg>
+      </a>
+    </aside>
+
+    <!-- Corpo -->
+    <div class="os-article-body">
+      <?php the_content(); ?>
+
+      <?php
+      // Tags do post (rodapé do corpo)
+      if ( ! empty( $tags ) ) : ?>
+        <div class="os-article-tags">
+          <span class="os-tags-label">Tags:</span>
+          <?php foreach ( $tags as $tag ) : ?>
+            <a href="<?php echo esc_url( get_tag_link( $tag->term_id ) ); ?>" class="os-tag-chip"><?php echo esc_html( $tag->name ); ?></a>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+    </div>
+
+    <!-- Sidebar sticky -->
+    <aside class="os-article-sidebar">
+
+      <?php /* Mais lidos (últimos 30 dias, 5 posts) */
+      $popular = new WP_Query( [
+        'post_type'      => 'post',
+        'posts_per_page' => 5,
+        'post__not_in'   => [ $post_id ],
+        'date_query'     => [ [ 'after' => '30 days ago' ] ],
+        'orderby'        => 'comment_count',
+        'order'          => 'DESC',
+      ] );
+      if ( ! $popular->have_posts() ) {
+        // fallback: posts recentes
+        $popular = new WP_Query( [
+          'post_type'      => 'post',
+          'posts_per_page' => 5,
+          'post__not_in'   => [ $post_id ],
+          'orderby'        => 'date',
+          'order'          => 'DESC',
+        ] );
+      }
+      if ( $popular->have_posts() ) : ?>
+        <div class="os-sidebar-block">
+          <h3 class="os-sidebar-title">Mais lidos</h3>
+          <ol class="os-sidebar-list">
+            <?php $n = 0; while ( $popular->have_posts() ) : $popular->the_post(); $n++; ?>
+              <li>
+                <span class="os-sidebar-num"><?php echo str_pad( $n, 2, '0', STR_PAD_LEFT ); ?></span>
+                <a href="<?php the_permalink(); ?>" class="os-sidebar-link"><?php the_title(); ?></a>
+              </li>
+            <?php endwhile; wp_reset_postdata(); ?>
+          </ol>
+        </div>
+      <?php endif; ?>
+
+      <?php /* Newsletter embutida */ ?>
+      <div class="os-sidebar-block os-sidebar-news">
+        <span class="os-sidebar-kicker">NEWSLETTER</span>
+        <h3 class="os-sidebar-news-title">A pauta financeira na sua caixa, 3×/semana.</h3>
+        <p class="os-sidebar-news-sub">Análise sem ruído e 0 promessas.</p>
+        <a href="#newsletter" class="os-btn os-sidebar-news-btn">Assinar grátis</a>
       </div>
-    <?php endif; ?>
+
+    </aside>
+
   </div>
 
   <!-- Bio do autor -->
