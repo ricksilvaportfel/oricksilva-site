@@ -259,82 +259,85 @@ body.oricksilva button { font-family: inherit; cursor: pointer; border: none; ba
 .os-panel { background: var(--bg-accent); border: 1px solid var(--hair); padding: 22px 24px; }
 
 /* Quote grid — design do mockup, dados reais via brapi */
-.os-quote-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 1px;
-  background: var(--hair);
-  border: 1px solid var(--hair);
+body.oricksilva .os-quote-grid {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  gap: 1px !important;
+  background: var(--hair) !important;
+  border: 1px solid var(--hair) !important;
+  margin-top: 8px;
 }
-.os-quote {
-  background: var(--bg-accent);
-  padding: 18px 20px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+body.oricksilva .os-quote {
+  background: var(--bg-accent) !important;
+  padding: 18px 20px 20px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+}
+body.oricksilva .os-quote-top {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
   min-width: 0;
 }
-.os-quote-top {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.os-quote-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text);
+body.oricksilva .os-quote-label {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: var(--text) !important;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.3 !important;
 }
-.os-quote-sub {
-  font-family: 'Inter', sans-serif;
-  font-size: 11px;
-  color: var(--text-mute);
+body.oricksilva .os-quote-sub {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 11px !important;
+  color: var(--text-mute) !important;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.3 !important;
 }
-.os-quote-price {
-  font-family: 'Fraunces', serif;
-  font-size: 22px;
-  font-weight: 400;
-  line-height: 1;
-  color: var(--text);
+body.oricksilva .os-quote-price {
+  font-family: 'Fraunces', serif !important;
+  font-size: 22px !important;
+  font-weight: 400 !important;
+  line-height: 1 !important;
+  color: var(--text) !important;
   white-space: nowrap;
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 4px !important;
 }
-.os-quote-currency {
-  font-size: 11px;
-  font-family: 'JetBrains Mono', monospace;
-  color: var(--text-mute);
-  font-weight: 500;
+body.oricksilva .os-quote-currency {
+  font-size: 11px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  color: var(--text-mute) !important;
+  font-weight: 500 !important;
 }
-.os-quote-chg {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  font-weight: 500;
+body.oricksilva .os-quote-chg {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
   white-space: nowrap;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
 }
-.os-quote-chg.is-up   { color: var(--accent); }
-.os-quote-chg.is-down { color: #c94a3a; }
-.os-quote-chg.is-flat { color: var(--text-mute); }
-.os-quote-spark { font-size: 9px; opacity: 0.8; }
+body.oricksilva .os-quote-chg.is-up   { color: var(--accent) !important; }
+body.oricksilva .os-quote-chg.is-down { color: #c94a3a !important; }
+body.oricksilva .os-quote-chg.is-flat { color: var(--text-mute) !important; }
+body.oricksilva .os-quote-spark { font-size: 9px; opacity: 0.8; }
 
 @media (max-width: 1100px) {
-  .os-quote-grid { grid-template-columns: repeat(4, 1fr); }
+  body.oricksilva .os-quote-grid { grid-template-columns: repeat(4, 1fr) !important; }
 }
 @media (max-width: 700px) {
-  .os-quote-grid { grid-template-columns: repeat(2, 1fr); }
+  body.oricksilva .os-quote-grid { grid-template-columns: repeat(2, 1fr) !important; }
 }
 .os-panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .os-panel-title { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 500; }
