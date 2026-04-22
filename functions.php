@@ -160,19 +160,22 @@ function orick_initials( $name ) {
 }
 
 /* =========================================================
-   9. COTAÇÕES — brapi.dev (cache 5 min, grátis, sem key)
-   =========================================================
-   Retorna array:
-   [
-     ['label'=>'IBOV','sub'=>'Ibovespa','price'=>128432.21,'chg'=>1.24,'currency'=>'pts'],
-     ...
-   ]
-   ---------------------------------------------------------
-   Obs.: a brapi grátis limita 100 requests/dia.
-   Cache de 300s (5min) mantém a gente MUITO abaixo disso.
+   9. COTAÇÕES — brapi.dev (cache 5 min, token obrigatório)
    ========================================================= */
+
+// Token da brapi (gerar em https://brapi.dev/dashboard)
+if ( ! defined( 'ORICK_BRAPI_TOKEN' ) ) {
+    define( 'ORICK_BRAPI_TOKEN', 'geeCqpxZHjsjJBDH5ArfjV' );
+}
+
+function orick_brapi_url( $endpoint, $extra = [] ) {
+    $qs = array_merge( $extra, [ 'token' => ORICK_BRAPI_TOKEN ] );
+    $sep = ( strpos( $endpoint, '?' ) === false ) ? '?' : '&';
+    return 'https://brapi.dev' . $endpoint . $sep . http_build_query( $qs );
+}
+
 function orick_fetch_quotes() {
-    $cache_key = 'orick_quotes_v4';
+    $cache_key = 'orick_quotes_v5';
     $cached    = get_transient( $cache_key );
     if ( $cached !== false && ! ( isset( $_GET['nocache'] ) && current_user_can( 'manage_options' ) ) ) {
         return $cached;
@@ -184,9 +187,17 @@ function orick_fetch_quotes() {
         'currencies'=> [],
     ];
 
+    $args = [
+        'timeout' => 15,
+        'headers' => [
+            'Accept'        => 'application/json',
+            'Authorization' => 'Bearer ' . ORICK_BRAPI_TOKEN,
+        ],
+    ];
+
     // ---------- IBOVESPA + histórico ----------
-    $ibov_url = 'https://brapi.dev/api/quote/^BVSP?range=1mo&interval=1d';
-    $r = wp_remote_get( $ibov_url, [ 'timeout' => 15, 'headers' => [ 'Accept' => 'application/json' ] ] );
+    $ibov_url = orick_brapi_url( '/api/quote/^BVSP', [ 'range' => '1mo', 'interval' => '1d' ] );
+    $r = wp_remote_get( $ibov_url, $args );
     if ( ! is_wp_error( $r ) && wp_remote_retrieve_response_code( $r ) === 200 ) {
         $d = json_decode( wp_remote_retrieve_body( $r ), true );
         if ( ! empty( $d['results'][0] ) ) {
@@ -217,12 +228,11 @@ function orick_fetch_quotes() {
         'PETR4'  => 'Petrobras',
     ];
     $stock_syms_qs = implode( ',', array_keys( $stock_list ) );
-    $stock_url = 'https://brapi.dev/api/quote/' . rawurlencode( $stock_syms_qs );
-    $sr = wp_remote_get( $stock_url, [ 'timeout' => 15, 'headers' => [ 'Accept' => 'application/json' ] ] );
+    $stock_url = orick_brapi_url( '/api/quote/' . rawurlencode( $stock_syms_qs ) );
+    $sr = wp_remote_get( $stock_url, $args );
     if ( ! is_wp_error( $sr ) && wp_remote_retrieve_response_code( $sr ) === 200 ) {
         $sd = json_decode( wp_remote_retrieve_body( $sr ), true );
         if ( ! empty( $sd['results'] ) ) {
-            // Mantém a ordem definida em $stock_list
             $by_sym = [];
             foreach ( $sd['results'] as $rr ) {
                 $sym = $rr['symbol'] ?? '';
@@ -248,9 +258,8 @@ function orick_fetch_quotes() {
         'GBP-BRL' => 'Libra',
         'JPY-BRL' => 'Iene',
     ];
-    $curr_qs  = implode( ',', array_keys( $curr_list ) );
-    $curr_url = 'https://brapi.dev/api/v2/currency?currency=' . rawurlencode( $curr_qs );
-    $cr = wp_remote_get( $curr_url, [ 'timeout' => 15, 'headers' => [ 'Accept' => 'application/json' ] ] );
+    $curr_url = orick_brapi_url( '/api/v2/currency', [ 'currency' => implode( ',', array_keys( $curr_list ) ) ] );
+    $cr = wp_remote_get( $curr_url, $args );
     if ( ! is_wp_error( $cr ) && wp_remote_retrieve_response_code( $cr ) === 200 ) {
         $cd = json_decode( wp_remote_retrieve_body( $cr ), true );
         if ( ! empty( $cd['currency'] ) ) {
