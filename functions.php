@@ -18,12 +18,13 @@ add_action( 'wp_enqueue_scripts', function () {
     );
     // Parent (Hello Elementor)
     wp_enqueue_style( 'hello-elementor', get_template_directory_uri() . '/style.css' );
-    // Child
+    // Child — usa filemtime pra cache-bust automático
+    $child_css_path = get_stylesheet_directory() . '/style.css';
     wp_enqueue_style(
         'oricksilva-child',
         get_stylesheet_directory_uri() . '/style.css',
         [ 'hello-elementor', 'oricksilva-fonts' ],
-        wp_get_theme()->get( 'Version' )
+        file_exists( $child_css_path ) ? filemtime( $child_css_path ) : wp_get_theme()->get( 'Version' )
     );
 }, 20 );
 
