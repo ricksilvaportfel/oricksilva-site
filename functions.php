@@ -268,6 +268,41 @@ function orick_fetch_quotes() {
     return $out;
 }
 
+/* =========================================================
+   5. CUSTOMIZER — Edição de textos no painel WP
+   ========================================================= */
+add_action( 'customize_register', function( $wp_customize ) {
+
+    /* SEÇÃO: Newsletter na lateral dos artigos */
+    $wp_customize->add_section( 'os_news_sidebar', [
+        'title'       => __( 'Newsletter (sidebar dos artigos)', 'oricksilva' ),
+        'priority'    => 30,
+        'description' => 'Edite os textos do bloco de newsletter que aparece na lateral direita dos artigos.',
+    ] );
+
+    $fields = [
+        'os_news_kicker'   => [ 'label' => 'Rótulo (topo)',     'default' => 'NEWSLETTER', 'type' => 'text' ],
+        'os_news_title'    => [ 'label' => 'Título',             'default' => 'A pauta financeira na sua caixa, 3×/semana.', 'type' => 'textarea' ],
+        'os_news_sub'      => [ 'label' => 'Descrição curta',    'default' => 'Análise sem ruído e 0 promessas.', 'type' => 'textarea' ],
+        'os_news_btn_text' => [ 'label' => 'Texto do botão',     'default' => 'Assinar grátis', 'type' => 'text' ],
+        'os_news_btn_url'  => [ 'label' => 'Link do botão',      'default' => '#newsletter', 'type' => 'url' ],
+    ];
+    foreach ( $fields as $id => $f ) {
+        $wp_customize->add_setting( $id, [
+            'default'           => $f['default'],
+            'sanitize_callback' => $f['type'] === 'url' ? 'esc_url_raw' : 'sanitize_text_field',
+            'transport'         => 'refresh',
+        ] );
+        $wp_customize->add_control( $id, [
+            'label'    => $f['label'],
+            'section'  => 'os_news_sidebar',
+            'type'     => $f['type'],
+            'settings' => $id,
+        ] );
+    }
+
+} );
+
 /**
  * DEBUG: acesse oricksilva.com.br/?brapi_debug=1 logado como admin pra ver status de cada endpoint
  */

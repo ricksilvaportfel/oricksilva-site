@@ -171,12 +171,12 @@ get_header(); ?>
         </div>
       <?php endif; ?>
 
-      <?php /* Newsletter embutida */ ?>
+      <?php /* Newsletter embutida (editável em Aparência → Personalizar → Newsletter sidebar) */ ?>
       <div class="os-sidebar-block os-sidebar-news">
-        <span class="os-sidebar-kicker">NEWSLETTER</span>
-        <h3 class="os-sidebar-news-title">A pauta financeira na sua caixa, 3×/semana.</h3>
-        <p class="os-sidebar-news-sub">Análise sem ruído e 0 promessas.</p>
-        <a href="#newsletter" class="os-btn os-sidebar-news-btn">Assinar grátis</a>
+        <span class="os-sidebar-kicker"><?php echo esc_html( get_theme_mod( 'os_news_kicker', 'NEWSLETTER' ) ); ?></span>
+        <h3 class="os-sidebar-news-title"><?php echo esc_html( get_theme_mod( 'os_news_title', 'A pauta financeira na sua caixa, 3×/semana.' ) ); ?></h3>
+        <p class="os-sidebar-news-sub"><?php echo esc_html( get_theme_mod( 'os_news_sub', 'Análise sem ruído e 0 promessas.' ) ); ?></p>
+        <a href="<?php echo esc_url( get_theme_mod( 'os_news_btn_url', '#newsletter' ) ); ?>" class="os-btn os-sidebar-news-btn"><?php echo esc_html( get_theme_mod( 'os_news_btn_text', 'Assinar grátis' ) ); ?></a>
       </div>
 
     </aside>
