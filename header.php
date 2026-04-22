@@ -154,8 +154,23 @@
             'fallback_cb'    => false,
         ] );
     } else {
-        $sub = [ 'Mercado Financeiro', 'Wealth Advisor', 'Seguros & Risco', 'Corporate', 'Carreira', 'Planejamento', 'Comportamental' ];
-        foreach ( $sub as $s ) echo '<a href="#">' . esc_html( $s ) . '</a>';
+        // label => slug da tag (cada item abre /tag/{slug}/ — mini-home temática renderizada por tag.php)
+        $sub = [
+            'Mercado Financeiro' => 'mercado-financeiro',
+            'Wealth Advisor'     => 'wealth-advisor',
+            'Seguros & Risco'    => 'seguros-risco',
+            'Corporate'          => 'corporate',
+            'Carreira'           => 'carreira',
+            'Planejamento'       => 'planejamento',
+            'Comportamental'     => 'comportamental',
+        ];
+        foreach ( $sub as $label => $slug ) {
+            printf(
+                '<a href="%s">%s</a>',
+                esc_url( home_url( '/tag/' . $slug . '/' ) ),
+                esc_html( $label )
+            );
+        }
     }
     ?>
     <span class="os-subnav-date"><?php echo mb_strtoupper( wp_date( 'D · d M Y · H:i' ) ); ?> BRT</span>
