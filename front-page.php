@@ -370,7 +370,12 @@ $videos_q = new WP_Query( [
     'orderby'        => 'date',
     'order'          => 'DESC',
 ] );
-$podcast_q     = orick_get_posts_by_cat( 'podcast', 5 );
+$podcast_q     = new WP_Query( [
+    'post_type'      => post_type_exists( 'episodio' ) ? 'episodio' : 'post',
+    'posts_per_page' => 4,
+    'orderby'        => 'date',
+    'order'          => 'DESC',
+] );
 ?>
 <section class="os-wrap os-media-split">
   <!-- Vídeos -->
@@ -428,34 +433,29 @@ $podcast_q     = orick_get_posts_by_cat( 'podcast', 5 );
   <div>
     <div class="os-sec-head" style="padding-top:0;">
       <h2 class="os-sec-title">Podcast</h2>
-      <a href="<?php echo esc_url( home_url('/categoria/podcast/') ); ?>" class="os-sec-link">Todos episódios →</a>
+      <a href="<?php echo esc_url( home_url( '/podcast/' ) ); ?>" class="os-sec-link">Todos episódios →</a>
     </div>
-    <?php if ( $podcast_q->have_posts() ) :
-      $podcast_q->the_post(); ?>
-      <a class="os-podcast-featured" href="<?php the_permalink(); ?>">
-        <div class="os-podcast-body">
-          <div>
-            <div class="os-podcast-ep">Episódio destacado</div>
-            <h3 class="os-podcast-title"><?php the_title(); ?></h3>
-            <div style="font-size:12px;color:var(--text-dim);">Por <?php the_author(); ?></div>
+    <?php
+    $podcast_ids = [];
+    if ( $podcast_q->have_posts() ) {
+        while ( $podcast_q->have_posts() ) { $podcast_q->the_post(); $podcast_ids[] = get_the_ID(); }
+        wp_reset_postdata();
+    }
+
+    if ( $podcast_ids && function_exists( 'orick_episodio_data' ) ) :
+        $hero_ep = orick_episodio_data( $podcast_ids[0] );
+        $rest    = array_slice( $podcast_ids, 1 );
+        $total   = function_exists( 'orick_ep_total' ) ? orick_ep_total() : count( $podcast_ids );
+        $i       = max( 1, $total - 1 );
+        orick_ep_render_featured( $hero_ep );
+        if ( $rest ) : ?>
+          <div class="os-podcast-list">
+            <?php foreach ( $rest as $pid ) : orick_ep_render_item( orick_episodio_data( $pid ), $i-- ); endforeach; ?>
           </div>
-        </div>
-      </a>
-      <div class="os-podcast-list">
-        <?php $i = 1; while ( $podcast_q->have_posts() ) : $podcast_q->the_post(); ?>
-          <a class="os-podcast-item" href="<?php the_permalink(); ?>">
-            <span class="os-podcast-idx">#<?php echo str_pad( $i, 3, '0', STR_PAD_LEFT ); $i++; ?></span>
-            <div>
-              <div class="os-podcast-item-title"><?php the_title(); ?></div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text-mute);margin-top:2px;">Spotify · Apple · YouTube</div>
-            </div>
-            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);">▶</span>
-          </a>
-        <?php endwhile; ?>
-      </div>
-    <?php else : ?>
-      <p style="color:var(--text-mute);font-size:12px;">Publique na categoria <code>podcast</code>.</p>
-    <?php endif; wp_reset_postdata(); ?>
+        <?php endif;
+    else : ?>
+      <p style="color:var(--text-mute);font-size:12px;">Publique um episódio em <strong>Podcast → Adicionar novo</strong> (menu do WP). O plugin Orick Ferramentas precisa estar ativo.</p>
+    <?php endif; ?>
   </div>
 </section>
 
