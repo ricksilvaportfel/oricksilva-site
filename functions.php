@@ -171,49 +171,58 @@ function orick_initials( $name ) {
    Cache de 300s (5min) mantém a gente MUITO abaixo disso.
    ========================================================= */
 function orick_fetch_quotes() {
-    $cache_key = 'orick_quotes_v1';
+    $cache_key = 'orick_quotes_v2';
     $cached    = get_transient( $cache_key );
-    if ( $cached !== false ) return $cached;
-
-    // Tickers B3 (ações e índice) que a brapi entrega de graça
-    $tickers = [
-        '^BVSP' => [ 'label' => 'IBOV',  'sub' => 'Ibovespa',   'currency' => 'pts' ],
-        'PETR4' => [ 'label' => 'PETR4', 'sub' => 'Petrobras',  'currency' => 'R$'  ],
-        'VALE3' => [ 'label' => 'VALE3', 'sub' => 'Vale',       'currency' => 'R$'  ],
-        'ITUB4' => [ 'label' => 'ITUB4', 'sub' => 'Itaú',       'currency' => 'R$'  ],
-        'BBAS3' => [ 'label' => 'BBAS3', 'sub' => 'Banco do Brasil', 'currency' => 'R$' ],
-    ];
-
-    $out        = [];
-    $tickers_qs = implode( ',', array_keys( $tickers ) );
-    $url        = 'https://brapi.dev/api/quote/' . rawurlencode( $tickers_qs ) . '?range=1d&interval=1d';
-    $resp       = wp_remote_get( $url, [ 'timeout' => 6 ] );
-
-    if ( ! is_wp_error( $resp ) && wp_remote_retrieve_response_code( $resp ) === 200 ) {
-        $data = json_decode( wp_remote_retrieve_body( $resp ), true );
-        if ( ! empty( $data['results'] ) ) {
-            foreach ( $data['results'] as $row ) {
-                $sym = $row['symbol'] ?? '';
-                if ( ! isset( $tickers[ $sym ] ) ) continue;
-                $out[] = [
-                    'label'    => $tickers[ $sym ]['label'],
-                    'sub'      => $tickers[ $sym ]['sub'],
-                    'price'    => isset( $row['regularMarketPrice'] ) ? (float) $row['regularMarketPrice'] : null,
-                    'chg'      => isset( $row['regularMarketChangePercent'] ) ? (float) $row['regularMarketChangePercent'] : null,
-                    'currency' => $tickers[ $sym ]['currency'],
-                ];
-            }
-        }
+    if ( $cached !== false && ! ( isset( $_GET['nocache'] ) && current_user_can( 'manage_options' ) ) ) {
+        return $cached;
     }
 
-    // USD/BRL e EUR/BRL (endpoint separado)
+    // Tickers B3 que a brapi entrega de graça
+    $tickers = [
+        '^BVSP' => [ 'label' => 'IBOV',  'sub' => 'Ibovespa',       'currency' => 'pts' ],
+        'PETR4' => [ 'label' => 'PETR4', 'sub' => 'Petrobras',      'currency' => 'R$'  ],
+        'VALE3' => [ 'label' => 'VALE3', 'sub' => 'Vale',           'currency' => 'R$'  ],
+        'ITUB4' => [ 'label' => 'ITUB4', 'sub' => 'Itaú',           'currency' => 'R$'  ],
+        'BBAS3' => [ 'label' => 'BBAS3', 'sub' => 'Banco do Brasil','currency' => 'R$'  ],
+    ];
+
+    $out = [];
+
+    // Busca cada ticker isoladamente pra não derrubar tudo se um falhar
+    foreach ( $tickers as $symbol => $meta ) {
+        $url  = 'https://brapi.dev/api/quote/' . rawurlencode( $symbol );
+        $resp = wp_remote_get( $url, [
+            'timeout' => 6,
+            'headers' => [ 'Accept' => 'application/json' ],
+        ] );
+
+        if ( is_wp_error( $resp ) ) continue;
+        if ( wp_remote_retrieve_response_code( $resp ) !== 200 ) continue;
+
+        $data = json_decode( wp_remote_retrieve_body( $resp ), true );
+        if ( empty( $data['results'][0] ) ) continue;
+
+        $row   = $data['results'][0];
+        $out[] = [
+            'label'    => $meta['label'],
+            'sub'      => $meta['sub'],
+            'price'    => isset( $row['regularMarketPrice'] ) ? (float) $row['regularMarketPrice'] : null,
+            'chg'      => isset( $row['regularMarketChangePercent'] ) ? (float) $row['regularMarketChangePercent'] : null,
+            'currency' => $meta['currency'],
+        ];
+    }
+
+    // Moedas (endpoint separado)
     $currencies = [
         'USD-BRL' => [ 'label' => 'Dólar', 'sub' => 'USD → BRL', 'currency' => 'R$' ],
         'EUR-BRL' => [ 'label' => 'Euro',  'sub' => 'EUR → BRL', 'currency' => 'R$' ],
     ];
-    $curr_qs = implode( ',', array_keys( $currencies ) );
+    $curr_qs  = implode( ',', array_keys( $currencies ) );
     $curr_url = 'https://brapi.dev/api/v2/currency?currency=' . rawurlencode( $curr_qs );
-    $cresp   = wp_remote_get( $curr_url, [ 'timeout' => 6 ] );
+    $cresp    = wp_remote_get( $curr_url, [
+        'timeout' => 6,
+        'headers' => [ 'Accept' => 'application/json' ],
+    ] );
     if ( ! is_wp_error( $cresp ) && wp_remote_retrieve_response_code( $cresp ) === 200 ) {
         $cdata = json_decode( wp_remote_retrieve_body( $cresp ), true );
         if ( ! empty( $cdata['currency'] ) ) {
@@ -224,17 +233,15 @@ function orick_fetch_quotes() {
                     'label'    => $currencies[ $pair ]['label'],
                     'sub'      => $currencies[ $pair ]['sub'],
                     'price'    => isset( $row['bidPrice'] ) ? (float) $row['bidPrice'] : null,
-                    'chg'      => isset( $row['askPrice'], $row['bidPrice'], $row['bidVariation'] )
-                                    ? (float) $row['bidVariation']
-                                    : null,
+                    'chg'      => isset( $row['bidVariation'] ) ? (float) $row['bidVariation'] : null,
                     'currency' => $currencies[ $pair ]['currency'],
                 ];
             }
         }
     }
 
-    // Cacheia mesmo se vazio, pra não martelar a API
-    set_transient( $cache_key, $out, 5 * MINUTE_IN_SECONDS );
+    // Cacheia (mesmo vazio, por 1min só, pra não martelar a API se falhar)
+    set_transient( $cache_key, $out, empty( $out ) ? MINUTE_IN_SECONDS : 5 * MINUTE_IN_SECONDS );
     return $out;
 }
 
