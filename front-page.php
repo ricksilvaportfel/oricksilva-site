@@ -363,7 +363,13 @@ $columnists = get_users( [ 'role' => 'columnist', 'number' => 4 ] );
 
 <?php
 /* ---------- VÍDEOS + PODCAST ---------- */
-$videos_q      = orick_get_posts_by_cat( 'videos', 4 );
+$videos_q = new WP_Query( [
+    'post_type'      => post_type_exists( 'video' ) ? 'video' : 'post',
+    'post_status'    => 'publish',
+    'posts_per_page' => 4,
+    'orderby'        => 'date',
+    'order'          => 'DESC',
+] );
 $podcast_q     = orick_get_posts_by_cat( 'podcast', 5 );
 ?>
 <section class="os-wrap os-media-split">
@@ -371,7 +377,7 @@ $podcast_q     = orick_get_posts_by_cat( 'podcast', 5 );
   <div>
     <div class="os-sec-head" style="padding-top:0;">
       <h2 class="os-sec-title">Vídeos</h2>
-      <a href="<?php echo esc_url( home_url('/categoria/videos/') ); ?>" class="os-sec-link">Canal completo →</a>
+      <a href="<?php echo esc_url( post_type_exists( 'video' ) ? get_post_type_archive_link( 'video' ) : home_url('/categoria/videos/') ); ?>" class="os-sec-link">Canal completo →</a>
     </div>
     <?php if ( $videos_q->have_posts() ) :
       $videos_q->the_post();

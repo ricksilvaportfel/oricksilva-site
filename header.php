@@ -44,7 +44,7 @@
             'Colunistas' => home_url('/categoria/colunistas/'),
             'Materiais' => home_url('/categoria/materiais/'),
             'Ferramentas' => post_type_exists( 'ferramenta' ) ? get_post_type_archive_link( 'ferramenta' ) : home_url('/categoria/ferramentas/'),
-            'Vídeos' => home_url('/categoria/videos/'),
+            'Vídeos' => post_type_exists( 'video' ) ? get_post_type_archive_link( 'video' ) : home_url('/categoria/videos/'),
             'Podcast' => home_url('/categoria/podcast/'),
             'Eventos' => home_url('/categoria/eventos/'),
         ];

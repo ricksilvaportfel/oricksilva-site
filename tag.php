@@ -48,17 +48,30 @@ $q_artigos = new WP_Query( [
     }, [ 'videos', 'podcast', 'materiais', 'eventos', 'ferramentas' ] ) ),
 ] );
 
-// Vídeos = tag + categoria videos OU tag + meta _orick_video_url
-$q_videos = new WP_Query( [
-    'post_type'      => 'post',
+// Vídeos = posts do CPT 'video' com essa tag (se CPT existir), senão fallback
+$q_videos_args = [
+    'post_type'      => post_type_exists( 'video' ) ? 'video' : 'post',
     'post_status'    => 'publish',
     'posts_per_page' => 4,
     'tag_id'         => $tag_id,
-    'meta_query'     => [
-        [ 'key' => '_orick_video_url', 'compare' => 'EXISTS' ],
-        [ 'key' => '_orick_video_url', 'value' => '', 'compare' => '!=' ],
-    ],
-] );
+];
+$q_videos = new WP_Query( $q_videos_args );
+
+// Se CPT não tem a tag associada (porque vídeos sincronizam sem tags),
+// tenta fallback: posts normais com essa tag + URL YouTube
+if ( ! $q_videos->have_posts() && post_type_exists( 'video' ) ) {
+    wp_reset_postdata();
+    $q_videos = new WP_Query( [
+        'post_type'      => 'post',
+        'post_status'    => 'publish',
+        'posts_per_page' => 4,
+        'tag_id'         => $tag_id,
+        'meta_query'     => [
+            [ 'key' => '_orick_video_url', 'compare' => 'EXISTS' ],
+            [ 'key' => '_orick_video_url', 'value' => '', 'compare' => '!=' ],
+        ],
+    ] );
+}
 
 $q_materiais = $q_by_tag_cat( 'materiais', 3 );
 $q_podcast   = $q_by_tag_cat( 'podcast', 4 );
