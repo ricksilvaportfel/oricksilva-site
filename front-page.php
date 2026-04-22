@@ -164,32 +164,71 @@ $orick_has_data = $orick_ibov || ! empty( $orick_stocks ) || ! empty( $orick_cur
         <?php endif; ?>
       </div>
 
-      <?php /* PAINEL 3 — Moedas */ ?>
-      <div class="os-mkt-panel">
+      <?php /* PAINEL 3 — Moedas (buscadas no lado do cliente via AwesomeAPI) */ ?>
+      <div class="os-mkt-panel" id="os-currencies-panel">
         <div class="os-mkt-head">
           <span class="os-mkt-title">Moedas</span>
           <span class="os-mkt-badge">SPOT</span>
         </div>
-        <?php if ( ! empty( $orick_curr ) ) : ?>
-          <ul class="os-mkt-list os-mkt-list-curr">
-            <?php foreach ( $orick_curr as $c ) :
-              $up = ( $c['chg'] ?? 0 ) >= 0;
-            ?>
-              <li>
-                <span class="os-mkt-list-sym"><?php echo esc_html( mb_strtoupper( $c['label'] ) ); ?></span>
-                <span class="os-mkt-list-price">R$ <?php echo esc_html( orick_fmt_price( $c['price'] ) ); ?></span>
-                <span class="os-mkt-list-chg <?php echo $up ? 'is-up' : 'is-down'; ?>"><?php echo esc_html( orick_fmt_chg( $c['chg'] ) ); ?></span>
-              </li>
-            <?php endforeach; ?>
-          </ul>
-          <div class="os-mkt-foot">
-            <span><?php echo count( $orick_curr ); ?> moedas</span>
-            <span>vs. Real</span>
-          </div>
-        <?php else : ?>
-          <div class="os-mkt-empty">Moedas indisponíveis</div>
-        <?php endif; ?>
+        <ul class="os-mkt-list os-mkt-list-curr" id="os-currencies-list">
+          <li data-pair="USDBRL"><span class="os-mkt-list-sym">DÓLAR</span><span class="os-mkt-list-price">—</span><span class="os-mkt-list-chg">—</span></li>
+          <li data-pair="EURBRL"><span class="os-mkt-list-sym">EURO</span><span class="os-mkt-list-price">—</span><span class="os-mkt-list-chg">—</span></li>
+          <li data-pair="GBPBRL"><span class="os-mkt-list-sym">LIBRA</span><span class="os-mkt-list-price">—</span><span class="os-mkt-list-chg">—</span></li>
+          <li data-pair="JPYBRL"><span class="os-mkt-list-sym">IENE</span><span class="os-mkt-list-price">—</span><span class="os-mkt-list-chg">—</span></li>
+        </ul>
+        <div class="os-mkt-foot">
+          <span id="os-curr-count">4 moedas</span>
+          <span>vs. Real</span>
+        </div>
       </div>
+      <script>
+      (function() {
+        var CACHE_KEY = 'osCurrV1';
+        var CACHE_TTL = 30 * 60 * 1000; // 30 min
+        var fmt = function(n) {
+          if (n === null || isNaN(n)) return '—';
+          return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+        var fmtChg = function(n) {
+          if (n === null || isNaN(n)) return '—';
+          var s = (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
+          return s;
+        };
+        var render = function(data) {
+          if (!data) return;
+          var list = document.getElementById('os-currencies-list');
+          if (!list) return;
+          list.querySelectorAll('li').forEach(function(li) {
+            var pair = li.getAttribute('data-pair');
+            var row = data[pair];
+            if (!row) return;
+            var bid = parseFloat(row.bid);
+            var chg = parseFloat(row.pctChange);
+            li.querySelector('.os-mkt-list-price').textContent = fmt(bid);
+            var chgEl = li.querySelector('.os-mkt-list-chg');
+            chgEl.textContent = fmtChg(chg);
+            chgEl.classList.remove('is-up', 'is-down');
+            chgEl.classList.add(chg >= 0 ? 'is-up' : 'is-down');
+          });
+        };
+        // 1) tenta cache
+        try {
+          var cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+          if (cached && cached.ts && (Date.now() - cached.ts) < CACHE_TTL && cached.data) {
+            render(cached.data);
+          }
+        } catch (e) {}
+        // 2) busca fresh
+        fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,GBP-BRL,JPY-BRL')
+          .then(function(r) { return r.ok ? r.json() : null; })
+          .then(function(data) {
+            if (!data) return;
+            render(data);
+            try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: data })); } catch (e) {}
+          })
+          .catch(function() {});
+      })();
+      </script>
 
     </div>
 

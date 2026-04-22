@@ -391,7 +391,7 @@ body.oricksilva .os-mkt-list li {
 body.oricksilva .os-mkt-list li:last-child { border-bottom: 0 !important; }
 
 body.oricksilva .os-mkt-list-curr li {
-  grid-template-columns: auto 1fr auto !important;
+  grid-template-columns: 1fr auto auto !important;
 }
 
 body.oricksilva .os-mkt-list-sym {
