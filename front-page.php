@@ -84,8 +84,13 @@ $right_q = orick_get_posts_by_tag( 'lateral-hero', 4 );
   </div>
 </section>
 
-<?php /* ---------- PAINEL DE MERCADO (brapi.dev — dados reais, visual do mockup) ---------- */
+<?php /* ---------- PAINEL DE MERCADO (brapi.dev — 3 painéis no estilo do mockup) ---------- */
 $orick_quotes = orick_fetch_quotes();
+$orick_ibov   = $orick_quotes['ibov']       ?? null;
+$orick_stocks = $orick_quotes['stocks']     ?? [];
+$orick_curr   = $orick_quotes['currencies'] ?? [];
+
+$orick_has_data = $orick_ibov || ! empty( $orick_stocks ) || ! empty( $orick_curr );
 ?>
 <section class="os-market">
   <div class="os-wrap">
@@ -94,34 +99,100 @@ $orick_quotes = orick_fetch_quotes();
       <span class="os-sec-link" style="pointer-events:none;opacity:.7;">Atualizado a cada 5 min · fonte: brapi.dev</span>
     </div>
 
-    <?php if ( empty( $orick_quotes ) ) : ?>
+    <?php if ( ! $orick_has_data ) : ?>
       <div class="os-panel" style="padding:32px;text-align:center;color:var(--text-mute);font-family:'JetBrains Mono',monospace;font-size:12px;">
-        Cotações indisponíveis no momento. Tente recarregar em instantes.
+        Cotações indisponíveis no momento.
       </div>
     <?php else : ?>
-      <div class="os-quote-grid">
-        <?php foreach ( $orick_quotes as $q ) :
-          $is_up   = isset( $q['chg'] ) && $q['chg'] >= 0;
-          $chg_cls = $q['chg'] === null ? 'is-flat' : ( $is_up ? 'is-up' : 'is-down' );
+
+    <div class="os-market-layout">
+
+      <?php /* PAINEL 1 — Ibovespa + sparkline */ ?>
+      <div class="os-mkt-panel os-mkt-ibov">
+        <div class="os-mkt-head">
+          <span class="os-mkt-title">Ibovespa</span>
+          <span class="os-mkt-badge">INTRADAY · DELAY 15MIN</span>
+        </div>
+        <?php if ( $orick_ibov ) :
+          $ibov_up = ( $orick_ibov['chg'] ?? 0 ) >= 0;
         ?>
-          <div class="os-quote">
-            <div class="os-quote-top">
-              <span class="os-quote-label"><?php echo esc_html( $q['label'] ); ?></span>
-              <span class="os-quote-sub"><?php echo esc_html( $q['sub'] ); ?></span>
-            </div>
-            <div class="os-quote-price">
-              <span class="os-quote-currency"><?php echo esc_html( $q['currency'] ); ?></span>
-              <?php echo esc_html( orick_fmt_price( $q['price'] ) ); ?>
-            </div>
-            <div class="os-quote-chg <?php echo esc_attr( $chg_cls ); ?>">
-              <?php echo esc_html( orick_fmt_chg( $q['chg'] ) ); ?>
-              <span class="os-quote-spark" aria-hidden="true">
-                <?php if ( $chg_cls === 'is-up' ) echo '▲'; elseif ( $chg_cls === 'is-down' ) echo '▼'; else echo '◆'; ?>
-              </span>
-            </div>
+          <div class="os-ibov-price-row">
+            <span class="os-ibov-label">IBOV</span>
+            <span class="os-ibov-price"><?php echo esc_html( orick_fmt_price( $orick_ibov['price'] ) ); ?></span>
+            <span class="os-ibov-chg <?php echo $ibov_up ? 'is-up' : 'is-down'; ?>">
+              <?php echo $ibov_up ? '▲' : '▼'; ?> <?php echo esc_html( orick_fmt_chg( $orick_ibov['chg'] ) ); ?>
+            </span>
           </div>
-        <?php endforeach; ?>
+          <div class="os-ibov-spark">
+            <?php echo orick_sparkline_svg( $orick_ibov['history'], 560, 110, $ibov_up ? '#A75232' : '#c94a3a' ); ?>
+          </div>
+          <div class="os-ibov-stats">
+            <div><span>Abertura</span><strong><?php echo esc_html( orick_fmt_price( $orick_ibov['open'] ) ); ?></strong></div>
+            <div><span>Mínima</span><strong><?php echo esc_html( orick_fmt_price( $orick_ibov['low'] ) ); ?></strong></div>
+            <div><span>Máxima</span><strong><?php echo esc_html( orick_fmt_price( $orick_ibov['high'] ) ); ?></strong></div>
+          </div>
+        <?php else : ?>
+          <div class="os-mkt-empty">Ibovespa indisponível</div>
+        <?php endif; ?>
       </div>
+
+      <?php /* PAINEL 2 — Índices & ETFs */ ?>
+      <div class="os-mkt-panel">
+        <div class="os-mkt-head">
+          <span class="os-mkt-title">Índices &amp; ETFs</span>
+          <span class="os-mkt-badge">B3</span>
+        </div>
+        <?php if ( ! empty( $orick_stocks ) ) : ?>
+          <ul class="os-mkt-list">
+            <?php foreach ( $orick_stocks as $s ) :
+              $up = ( $s['chg'] ?? 0 ) >= 0;
+            ?>
+              <li>
+                <span class="os-mkt-list-sym"><?php echo esc_html( $s['symbol'] ); ?></span>
+                <span class="os-mkt-list-name"><?php echo esc_html( $s['name'] ); ?></span>
+                <span class="os-mkt-list-price">R$ <?php echo esc_html( orick_fmt_price( $s['price'] ) ); ?></span>
+                <span class="os-mkt-list-chg <?php echo $up ? 'is-up' : 'is-down'; ?>"><?php echo esc_html( orick_fmt_chg( $s['chg'] ) ); ?></span>
+              </li>
+            <?php endforeach; ?>
+          </ul>
+          <div class="os-mkt-foot">
+            <span><?php echo count( $orick_stocks ); ?> ativos</span>
+            <span>Atualizado <?php echo esc_html( date_i18n( 'H:i', current_time( 'timestamp' ) ) ); ?></span>
+          </div>
+        <?php else : ?>
+          <div class="os-mkt-empty">Lista indisponível</div>
+        <?php endif; ?>
+      </div>
+
+      <?php /* PAINEL 3 — Moedas */ ?>
+      <div class="os-mkt-panel">
+        <div class="os-mkt-head">
+          <span class="os-mkt-title">Moedas</span>
+          <span class="os-mkt-badge">SPOT</span>
+        </div>
+        <?php if ( ! empty( $orick_curr ) ) : ?>
+          <ul class="os-mkt-list os-mkt-list-curr">
+            <?php foreach ( $orick_curr as $c ) :
+              $up = ( $c['chg'] ?? 0 ) >= 0;
+            ?>
+              <li>
+                <span class="os-mkt-list-sym"><?php echo esc_html( mb_strtoupper( $c['label'] ) ); ?></span>
+                <span class="os-mkt-list-price">R$ <?php echo esc_html( orick_fmt_price( $c['price'] ) ); ?></span>
+                <span class="os-mkt-list-chg <?php echo $up ? 'is-up' : 'is-down'; ?>"><?php echo esc_html( orick_fmt_chg( $c['chg'] ) ); ?></span>
+              </li>
+            <?php endforeach; ?>
+          </ul>
+          <div class="os-mkt-foot">
+            <span><?php echo count( $orick_curr ); ?> moedas</span>
+            <span>vs. Real</span>
+          </div>
+        <?php else : ?>
+          <div class="os-mkt-empty">Moedas indisponíveis</div>
+        <?php endif; ?>
+      </div>
+
+    </div>
+
     <?php endif; ?>
   </div>
 </section>

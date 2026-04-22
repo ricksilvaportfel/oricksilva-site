@@ -258,86 +258,193 @@ body.oricksilva button { font-family: inherit; cursor: pointer; border: none; ba
 .os-market-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 24px; }
 .os-panel { background: var(--bg-accent); border: 1px solid var(--hair); padding: 22px 24px; }
 
-/* Quote grid — design do mockup, dados reais via brapi */
-body.oricksilva .os-quote-grid {
+/* Mercado — 3 painéis no estilo do mockup */
+body.oricksilva .os-market-layout {
   display: grid !important;
-  grid-template-columns: repeat(7, 1fr) !important;
-  gap: 1px !important;
-  background: var(--hair) !important;
-  border: 1px solid var(--hair) !important;
+  grid-template-columns: 1.35fr 1fr 1fr !important;
+  gap: 16px !important;
   margin-top: 8px;
 }
-body.oricksilva .os-quote {
+body.oricksilva .os-mkt-panel {
   background: var(--bg-accent) !important;
-  padding: 18px 20px 20px !important;
+  border: 1px solid var(--hair) !important;
+  padding: 22px 24px !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 10px !important;
+  gap: 18px !important;
   min-width: 0 !important;
 }
-body.oricksilva .os-quote-top {
+body.oricksilva .os-mkt-head {
   display: flex !important;
-  flex-direction: column !important;
-  gap: 2px !important;
-  min-width: 0;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
 }
-body.oricksilva .os-quote-label {
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: 11px !important;
+body.oricksilva .os-mkt-title {
+  font-family: 'Fraunces', serif !important;
+  font-size: 19px !important;
   font-weight: 500 !important;
+  color: var(--text) !important;
+  line-height: 1 !important;
+}
+body.oricksilva .os-mkt-badge {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 10px !important;
   letter-spacing: 0.08em !important;
   text-transform: uppercase !important;
-  color: var(--text) !important;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.3 !important;
-}
-body.oricksilva .os-quote-sub {
-  font-family: 'Inter', sans-serif !important;
-  font-size: 11px !important;
   color: var(--text-mute) !important;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.3 !important;
+  border: 1px solid var(--hair) !important;
+  padding: 4px 8px !important;
+  white-space: nowrap !important;
 }
-body.oricksilva .os-quote-price {
+body.oricksilva .os-mkt-empty {
+  color: var(--text-mute);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 24px 0;
+}
+
+/* Painel Ibovespa */
+body.oricksilva .os-ibov-price-row {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+}
+body.oricksilva .os-ibov-label {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 11px !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: var(--text-mute) !important;
+}
+body.oricksilva .os-ibov-price {
   font-family: 'Fraunces', serif !important;
-  font-size: 22px !important;
+  font-size: 44px !important;
   font-weight: 400 !important;
   line-height: 1 !important;
   color: var(--text) !important;
-  white-space: nowrap;
+  letter-spacing: -0.01em !important;
+}
+body.oricksilva .os-ibov-chg {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 4px 8px !important;
+  border: 1px solid currentColor !important;
+  line-height: 1 !important;
+}
+body.oricksilva .os-ibov-chg.is-up   { color: var(--accent) !important; }
+body.oricksilva .os-ibov-chg.is-down { color: #c94a3a !important; }
+body.oricksilva .os-ibov-spark {
+  margin: 0 -6px !important;
+  border-bottom: 1px solid var(--hair) !important;
+  padding-bottom: 4px !important;
+}
+body.oricksilva .os-spark-svg {
+  width: 100%;
+  height: 110px;
+  display: block;
+}
+body.oricksilva .os-ibov-stats {
   display: flex !important;
-  align-items: baseline !important;
+  gap: 28px !important;
+  flex-wrap: wrap !important;
+}
+body.oricksilva .os-ibov-stats > div {
+  display: flex !important;
+  flex-direction: column !important;
   gap: 4px !important;
 }
-body.oricksilva .os-quote-currency {
+body.oricksilva .os-ibov-stats span {
+  font-family: 'Inter', sans-serif !important;
   font-size: 11px !important;
-  font-family: 'JetBrains Mono', monospace !important;
   color: var(--text-mute) !important;
-  font-weight: 500 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
 }
-body.oricksilva .os-quote-chg {
+body.oricksilva .os-ibov-stats strong {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: var(--text) !important;
+}
+
+/* Lista de ações / moedas */
+body.oricksilva .os-mkt-list {
+  list-style: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  flex: 1 !important;
+}
+body.oricksilva .os-mkt-list li {
+  display: grid !important;
+  grid-template-columns: auto 1fr auto auto !important;
+  align-items: baseline !important;
+  gap: 10px !important;
+  padding: 12px 0 !important;
+  border-bottom: 1px solid var(--hair) !important;
+}
+body.oricksilva .os-mkt-list li:last-child { border-bottom: 0 !important; }
+
+body.oricksilva .os-mkt-list-curr li {
+  grid-template-columns: auto 1fr auto !important;
+}
+
+body.oricksilva .os-mkt-list-sym {
   font-family: 'JetBrains Mono', monospace !important;
   font-size: 12px !important;
   font-weight: 500 !important;
-  white-space: nowrap;
-  display: flex !important;
-  align-items: center !important;
-  gap: 6px !important;
+  letter-spacing: 0.04em !important;
+  color: var(--text) !important;
+  min-width: 56px !important;
 }
-body.oricksilva .os-quote-chg.is-up   { color: var(--accent) !important; }
-body.oricksilva .os-quote-chg.is-down { color: #c94a3a !important; }
-body.oricksilva .os-quote-chg.is-flat { color: var(--text-mute) !important; }
-body.oricksilva .os-quote-spark { font-size: 9px; opacity: 0.8; }
+body.oricksilva .os-mkt-list-name {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 12px !important;
+  color: var(--text-mute) !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+body.oricksilva .os-mkt-list-price {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 13px !important;
+  color: var(--text) !important;
+  white-space: nowrap !important;
+}
+body.oricksilva .os-mkt-list-chg {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 12px !important;
+  white-space: nowrap !important;
+  min-width: 54px !important;
+  text-align: right !important;
+}
+body.oricksilva .os-mkt-list-chg.is-up   { color: var(--accent) !important; }
+body.oricksilva .os-mkt-list-chg.is-down { color: #c94a3a !important; }
+
+body.oricksilva .os-mkt-foot {
+  display: flex !important;
+  justify-content: space-between !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 10px !important;
+  color: var(--text-mute) !important;
+  padding-top: 12px !important;
+  border-top: 1px solid var(--hair) !important;
+  margin-top: auto !important;
+}
 
 @media (max-width: 1100px) {
-  body.oricksilva .os-quote-grid { grid-template-columns: repeat(4, 1fr) !important; }
+  body.oricksilva .os-market-layout { grid-template-columns: 1fr 1fr !important; }
+  body.oricksilva .os-mkt-ibov { grid-column: 1 / -1 !important; }
 }
 @media (max-width: 700px) {
-  body.oricksilva .os-quote-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  body.oricksilva .os-market-layout { grid-template-columns: 1fr !important; }
+  body.oricksilva .os-mkt-ibov { grid-column: auto !important; }
+  body.oricksilva .os-ibov-price { font-size: 36px !important; }
 }
 .os-panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .os-panel-title { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 500; }

@@ -172,78 +172,131 @@ function orick_initials( $name ) {
    Cache de 300s (5min) mantém a gente MUITO abaixo disso.
    ========================================================= */
 function orick_fetch_quotes() {
-    $cache_key = 'orick_quotes_v2';
+    $cache_key = 'orick_quotes_v3';
     $cached    = get_transient( $cache_key );
     if ( $cached !== false && ! ( isset( $_GET['nocache'] ) && current_user_can( 'manage_options' ) ) ) {
         return $cached;
     }
 
-    // Tickers B3 que a brapi entrega de graça
-    $tickers = [
-        '^BVSP' => [ 'label' => 'IBOV',  'sub' => 'Ibovespa',       'currency' => 'pts' ],
-        'PETR4' => [ 'label' => 'PETR4', 'sub' => 'Petrobras',      'currency' => 'R$'  ],
-        'VALE3' => [ 'label' => 'VALE3', 'sub' => 'Vale',           'currency' => 'R$'  ],
-        'ITUB4' => [ 'label' => 'ITUB4', 'sub' => 'Itaú',           'currency' => 'R$'  ],
-        'BBAS3' => [ 'label' => 'BBAS3', 'sub' => 'Banco do Brasil','currency' => 'R$'  ],
+    $out = [
+        'ibov'      => null,   // dados do Ibovespa + histórico
+        'stocks'    => [],     // lista de ações / ETFs
+        'currencies'=> [],     // moedas
     ];
 
-    $out = [];
+    // ---------- IBOVESPA + histórico (pro sparkline) ----------
+    $ibov_url = 'https://brapi.dev/api/quote/^BVSP?range=1mo&interval=1d';
+    $r = wp_remote_get( $ibov_url, [ 'timeout' => 8, 'headers' => [ 'Accept' => 'application/json' ] ] );
+    if ( ! is_wp_error( $r ) && wp_remote_retrieve_response_code( $r ) === 200 ) {
+        $d = json_decode( wp_remote_retrieve_body( $r ), true );
+        if ( ! empty( $d['results'][0] ) ) {
+            $row = $d['results'][0];
+            $hist = [];
+            if ( ! empty( $row['historicalDataPrice'] ) ) {
+                foreach ( $row['historicalDataPrice'] as $h ) {
+                    if ( isset( $h['close'] ) ) $hist[] = (float) $h['close'];
+                }
+            }
+            $out['ibov'] = [
+                'price'   => isset( $row['regularMarketPrice'] ) ? (float) $row['regularMarketPrice'] : null,
+                'chg'     => isset( $row['regularMarketChangePercent'] ) ? (float) $row['regularMarketChangePercent'] : null,
+                'open'    => isset( $row['regularMarketOpen'] ) ? (float) $row['regularMarketOpen'] : null,
+                'low'     => isset( $row['regularMarketDayLow'] ) ? (float) $row['regularMarketDayLow'] : null,
+                'high'    => isset( $row['regularMarketDayHigh'] ) ? (float) $row['regularMarketDayHigh'] : null,
+                'history' => $hist,
+            ];
+        }
+    }
 
-    // Busca cada ticker isoladamente pra não derrubar tudo se um falhar
-    foreach ( $tickers as $symbol => $meta ) {
-        $url  = 'https://brapi.dev/api/quote/' . rawurlencode( $symbol );
-        $resp = wp_remote_get( $url, [
-            'timeout' => 6,
-            'headers' => [ 'Accept' => 'application/json' ],
-        ] );
-
-        if ( is_wp_error( $resp ) ) continue;
-        if ( wp_remote_retrieve_response_code( $resp ) !== 200 ) continue;
-
-        $data = json_decode( wp_remote_retrieve_body( $resp ), true );
-        if ( empty( $data['results'][0] ) ) continue;
-
-        $row   = $data['results'][0];
-        $out[] = [
-            'label'    => $meta['label'],
-            'sub'      => $meta['sub'],
-            'price'    => isset( $row['regularMarketPrice'] ) ? (float) $row['regularMarketPrice'] : null,
-            'chg'      => isset( $row['regularMarketChangePercent'] ) ? (float) $row['regularMarketChangePercent'] : null,
-            'currency' => $meta['currency'],
+    // ---------- ÍNDICES / ETFs (lista) ----------
+    $stock_list = [
+        'SMAL11' => 'Small Caps',
+        'IVVB11' => 'S&P 500',
+        'BOVA11' => 'Bovespa ETF',
+        'HASH11' => 'Cripto Index',
+        'PETR4'  => 'Petrobras',
+    ];
+    foreach ( $stock_list as $sym => $name ) {
+        $u = 'https://brapi.dev/api/quote/' . rawurlencode( $sym );
+        $rr = wp_remote_get( $u, [ 'timeout' => 6, 'headers' => [ 'Accept' => 'application/json' ] ] );
+        if ( is_wp_error( $rr ) || wp_remote_retrieve_response_code( $rr ) !== 200 ) continue;
+        $dd = json_decode( wp_remote_retrieve_body( $rr ), true );
+        if ( empty( $dd['results'][0] ) ) continue;
+        $rw = $dd['results'][0];
+        $out['stocks'][] = [
+            'symbol' => $sym,
+            'name'   => $name,
+            'price'  => isset( $rw['regularMarketPrice'] ) ? (float) $rw['regularMarketPrice'] : null,
+            'chg'    => isset( $rw['regularMarketChangePercent'] ) ? (float) $rw['regularMarketChangePercent'] : null,
         ];
     }
 
-    // Moedas (endpoint separado)
-    $currencies = [
-        'USD-BRL' => [ 'label' => 'Dólar', 'sub' => 'USD → BRL', 'currency' => 'R$' ],
-        'EUR-BRL' => [ 'label' => 'Euro',  'sub' => 'EUR → BRL', 'currency' => 'R$' ],
+    // ---------- MOEDAS ----------
+    $curr_list = [
+        'USD-BRL' => 'Dólar',
+        'EUR-BRL' => 'Euro',
+        'GBP-BRL' => 'Libra',
+        'JPY-BRL' => 'Iene',
     ];
-    $curr_qs  = implode( ',', array_keys( $currencies ) );
+    $curr_qs  = implode( ',', array_keys( $curr_list ) );
     $curr_url = 'https://brapi.dev/api/v2/currency?currency=' . rawurlencode( $curr_qs );
-    $cresp    = wp_remote_get( $curr_url, [
-        'timeout' => 6,
-        'headers' => [ 'Accept' => 'application/json' ],
-    ] );
-    if ( ! is_wp_error( $cresp ) && wp_remote_retrieve_response_code( $cresp ) === 200 ) {
-        $cdata = json_decode( wp_remote_retrieve_body( $cresp ), true );
-        if ( ! empty( $cdata['currency'] ) ) {
-            foreach ( $cdata['currency'] as $row ) {
+    $cr = wp_remote_get( $curr_url, [ 'timeout' => 6, 'headers' => [ 'Accept' => 'application/json' ] ] );
+    if ( ! is_wp_error( $cr ) && wp_remote_retrieve_response_code( $cr ) === 200 ) {
+        $cd = json_decode( wp_remote_retrieve_body( $cr ), true );
+        if ( ! empty( $cd['currency'] ) ) {
+            foreach ( $cd['currency'] as $row ) {
                 $pair = ( $row['fromCurrency'] ?? '' ) . '-' . ( $row['toCurrency'] ?? '' );
-                if ( ! isset( $currencies[ $pair ] ) ) continue;
-                $out[] = [
-                    'label'    => $currencies[ $pair ]['label'],
-                    'sub'      => $currencies[ $pair ]['sub'],
-                    'price'    => isset( $row['bidPrice'] ) ? (float) $row['bidPrice'] : null,
-                    'chg'      => isset( $row['bidVariation'] ) ? (float) $row['bidVariation'] : null,
-                    'currency' => $currencies[ $pair ]['currency'],
+                if ( ! isset( $curr_list[ $pair ] ) ) continue;
+                $out['currencies'][] = [
+                    'label' => $curr_list[ $pair ],
+                    'code'  => $row['fromCurrency'] ?? '',
+                    'price' => isset( $row['bidPrice'] ) ? (float) $row['bidPrice'] : null,
+                    'chg'   => isset( $row['bidVariation'] ) ? (float) $row['bidVariation'] : null,
                 ];
             }
         }
     }
 
-    // Cacheia (mesmo vazio, por 1min só, pra não martelar a API se falhar)
-    set_transient( $cache_key, $out, empty( $out ) ? MINUTE_IN_SECONDS : 5 * MINUTE_IN_SECONDS );
+    $empty = ( $out['ibov'] === null && empty( $out['stocks'] ) && empty( $out['currencies'] ) );
+    set_transient( $cache_key, $out, $empty ? MINUTE_IN_SECONDS : 5 * MINUTE_IN_SECONDS );
     return $out;
+}
+
+/**
+ * Sparkline SVG a partir de array de preços
+ */
+function orick_sparkline_svg( $values, $w = 280, $h = 70, $stroke = '#A75232' ) {
+    if ( empty( $values ) || count( $values ) < 2 ) return '';
+    $min = min( $values );
+    $max = max( $values );
+    $range = max( 0.0001, $max - $min );
+    $n = count( $values );
+    $points = [];
+    foreach ( $values as $i => $v ) {
+        $x = ( $i / ( $n - 1 ) ) * $w;
+        $y = $h - ( ( $v - $min ) / $range ) * ( $h - 4 ) - 2;
+        $points[] = round( $x, 2 ) . ',' . round( $y, 2 );
+    }
+    $path = 'M ' . str_replace( ',', ' ', $points[0] );
+    for ( $i = 1; $i < count( $points ); $i++ ) {
+        $path .= ' L ' . str_replace( ',', ' ', $points[ $i ] );
+    }
+    // área sob a curva
+    $area = $path . ' L ' . $w . ' ' . $h . ' L 0 ' . $h . ' Z';
+    $id = 'sp' . wp_generate_uuid4();
+    return sprintf(
+        '<svg class="os-spark-svg" viewBox="0 0 %1$d %2$d" preserveAspectRatio="none" role="img" aria-hidden="true">
+           <defs>
+             <linearGradient id="%5$s" x1="0" y1="0" x2="0" y2="1">
+               <stop offset="0%%" stop-color="%4$s" stop-opacity="0.25"/>
+               <stop offset="100%%" stop-color="%4$s" stop-opacity="0"/>
+             </linearGradient>
+           </defs>
+           <path d="%6$s" fill="url(#%5$s)" stroke="none"/>
+           <path d="%3$s" fill="none" stroke="%4$s" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+         </svg>',
+        $w, $h, esc_attr( $path ), esc_attr( $stroke ), esc_attr( $id ), esc_attr( $area )
+    );
 }
 
 /* Formata preço em pt-BR */
