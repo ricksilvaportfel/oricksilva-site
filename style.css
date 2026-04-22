@@ -1553,42 +1553,69 @@ body.oricksilva .orick-tool-header a:not(.os-btn-primary) {
 body.oricksilva .orick-tool-hero,
 body.oricksilva .orick-page-hero,
 body.oricksilva .os-single-hero {
-  padding-top: 28px !important;
-  padding-bottom: 20px !important;
+  padding-top: 20px !important;
+  padding-bottom: 12px !important;
   min-height: 0 !important;
 }
 body.oricksilva .orick-tool-hero h1,
 body.oricksilva .orick-page-hero h1,
 body.oricksilva .os-single-hero h1,
 body.oricksilva .orick-tool-hero .orick-tool-title {
-  font-size: 34px !important;
-  line-height: 1.1 !important;
-  margin: 4px 0 6px !important;
+  font-size: 26px !important;
+  line-height: 1.15 !important;
+  margin: 2px 0 4px !important;
+  letter-spacing: -0.01em;
 }
 body.oricksilva .orick-tool-hero .orick-tool-kicker,
 body.oricksilva .orick-page-hero .orick-kicker {
-  font-size: 10.5px !important;
-  letter-spacing: 1.4px !important;
+  font-size: 10px !important;
+  letter-spacing: 1.6px !important;
 }
 body.oricksilva .orick-tool-hero p,
 body.oricksilva .orick-page-hero p {
-  font-size: 14px !important;
+  font-size: 13px !important;
   margin: 0 !important;
   color: var(--text-dim) !important;
+  max-width: 520px;
 }
 body.oricksilva .orick-breadcrumbs {
-  font-size: 11px !important;
+  font-size: 10.5px !important;
   letter-spacing: 1.2px !important;
   color: var(--text-mute) !important;
-  margin-bottom: 14px !important;
+  margin-bottom: 8px !important;
 }
+
+/* Esconde a barra "Olá, Nome · Sair" que o plugin de Ferramentas injeta —
+   o login do WP já cobre isso no header global. */
+body.oricksilva .ofr-session-bar { display: none !important; }
 
 /* Também compacta /artigos, categoria, tag, autor, etc */
 body.oricksilva .os-archive-head {
-  padding-top: 36px !important;
-  padding-bottom: 28px !important;
+  padding-top: 28px !important;
+  padding-bottom: 16px !important;
 }
 body.oricksilva .os-archive-title {
-  font-size: 48px !important;
-  margin: 8px 0 6px !important;
+  font-size: 36px !important;
+  margin: 4px 0 4px !important;
+  letter-spacing: -0.01em;
+}
+body.oricksilva .os-archive-kicker {
+  font-size: 10px !important;
+  letter-spacing: 1.6px !important;
+}
+body.oricksilva .os-archive-desc {
+  font-size: 13px !important;
+  max-width: 520px !important;
+}
+
+/* ============================================================
+   LOGO FIX — manter proporção
+   ============================================================ */
+body.oricksilva .os-brand img {
+  max-height: 44px;
+  max-width: 180px;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+  display: block;
 }

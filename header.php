@@ -17,9 +17,9 @@
       <a href="<?php echo esc_url( home_url( '/' ) ); ?>" style="display:flex;align-items:center;gap:10px;">
         <?php
         $os_logo_url = get_theme_mod( 'os_logo_image', '' );
-        $os_logo_h   = intval( get_theme_mod( 'os_logo_height', 32 ) );
+        $os_logo_h   = intval( get_theme_mod( 'os_logo_height', 40 ) );
         if ( $os_logo_url ) : ?>
-          <img src="<?php echo esc_url( $os_logo_url ); ?>" alt="<?php bloginfo( 'name' ); ?>" style="height:<?php echo esc_attr( $os_logo_h ); ?>px;width:auto;display:block;">
+          <img src="<?php echo esc_url( $os_logo_url ); ?>" alt="<?php bloginfo( 'name' ); ?>" style="max-height:<?php echo esc_attr( $os_logo_h ); ?>px;">
         <?php else : ?>
           <div class="os-brand-mark">RS</div>
           <div class="os-brand-name">O <em>Rick</em> Silva</div>
