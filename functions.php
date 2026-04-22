@@ -219,57 +219,51 @@ function orick_fetch_quotes() {
         }
     }
 
-    // ---------- ÍNDICES / ETFs — BATCH em 1 request ----------
+    // ---------- ÍNDICES / ETFs — 1 request por ativo (plano free brapi) ----------
     $stock_list = [
         'SMAL11' => 'Small Caps',
         'GPUS11' => 'GPU / IA',
         'IVVB11' => 'S&P 500',
         'BOVA11' => 'Bovespa ETF',
     ];
-    $stock_syms_qs = implode( ',', array_keys( $stock_list ) );
-    $stock_url = orick_brapi_url( '/api/quote/' . rawurlencode( $stock_syms_qs ) );
-    $sr = wp_remote_get( $stock_url, $args );
-    if ( ! is_wp_error( $sr ) && wp_remote_retrieve_response_code( $sr ) === 200 ) {
-        $sd = json_decode( wp_remote_retrieve_body( $sr ), true );
-        if ( ! empty( $sd['results'] ) ) {
-            $by_sym = [];
-            foreach ( $sd['results'] as $rr ) {
-                $sym = $rr['symbol'] ?? '';
-                if ( isset( $stock_list[ $sym ] ) ) $by_sym[ $sym ] = $rr;
-            }
-            foreach ( $stock_list as $sym => $name ) {
-                if ( ! isset( $by_sym[ $sym ] ) ) continue;
-                $rw = $by_sym[ $sym ];
-                $out['stocks'][] = [
-                    'symbol' => $sym,
-                    'name'   => $name,
-                    'price'  => isset( $rw['regularMarketPrice'] ) ? (float) $rw['regularMarketPrice'] : null,
-                    'chg'    => isset( $rw['regularMarketChangePercent'] ) ? (float) $rw['regularMarketChangePercent'] : null,
-                ];
-            }
-        }
+    foreach ( $stock_list as $sym => $name ) {
+        $u  = orick_brapi_url( '/api/quote/' . rawurlencode( $sym ) );
+        $rr = wp_remote_get( $u, $args );
+        if ( is_wp_error( $rr ) || wp_remote_retrieve_response_code( $rr ) !== 200 ) continue;
+        $dd = json_decode( wp_remote_retrieve_body( $rr ), true );
+        if ( empty( $dd['results'][0] ) ) continue;
+        $rw = $dd['results'][0];
+        $out['stocks'][] = [
+            'symbol' => $sym,
+            'name'   => $name,
+            'price'  => isset( $rw['regularMarketPrice'] ) ? (float) $rw['regularMarketPrice'] : null,
+            'chg'    => isset( $rw['regularMarketChangePercent'] ) ? (float) $rw['regularMarketChangePercent'] : null,
+        ];
     }
 
-    // ---------- MOEDAS ----------
+    // ---------- MOEDAS (AwesomeAPI — grátis, sem token) ----------
     $curr_list = [
         'USD-BRL' => 'Dólar',
         'EUR-BRL' => 'Euro',
         'GBP-BRL' => 'Libra',
         'JPY-BRL' => 'Iene',
     ];
-    $curr_url = orick_brapi_url( '/api/v2/currency', [ 'currency' => implode( ',', array_keys( $curr_list ) ) ] );
-    $cr = wp_remote_get( $curr_url, $args );
+    // AwesomeAPI aceita múltiplos separados por vírgula: USD-BRL,EUR-BRL,GBP-BRL,JPY-BRL
+    $curr_url = 'https://economia.awesomeapi.com.br/json/last/' . rawurlencode( implode( ',', array_keys( $curr_list ) ) );
+    $cr = wp_remote_get( $curr_url, [ 'timeout' => 10, 'headers' => [ 'Accept' => 'application/json' ] ] );
     if ( ! is_wp_error( $cr ) && wp_remote_retrieve_response_code( $cr ) === 200 ) {
         $cd = json_decode( wp_remote_retrieve_body( $cr ), true );
-        if ( ! empty( $cd['currency'] ) ) {
-            foreach ( $cd['currency'] as $row ) {
-                $pair = ( $row['fromCurrency'] ?? '' ) . '-' . ( $row['toCurrency'] ?? '' );
-                if ( ! isset( $curr_list[ $pair ] ) ) continue;
+        if ( is_array( $cd ) ) {
+            // AwesomeAPI retorna chaves tipo "USDBRL" (sem hífen)
+            foreach ( $curr_list as $pair => $label ) {
+                $key = str_replace( '-', '', $pair ); // USD-BRL -> USDBRL
+                if ( empty( $cd[ $key ] ) ) continue;
+                $row = $cd[ $key ];
                 $out['currencies'][] = [
-                    'label' => $curr_list[ $pair ],
-                    'code'  => $row['fromCurrency'] ?? '',
-                    'price' => isset( $row['bidPrice'] ) ? (float) $row['bidPrice'] : null,
-                    'chg'   => isset( $row['bidVariation'] ) ? (float) $row['bidVariation'] : null,
+                    'label' => $label,
+                    'code'  => $row['code'] ?? '',
+                    'price' => isset( $row['bid'] ) ? (float) $row['bid'] : null,
+                    'chg'   => isset( $row['pctChange'] ) ? (float) $row['pctChange'] : null,
                 ];
             }
         }
