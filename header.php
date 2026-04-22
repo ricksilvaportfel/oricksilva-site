@@ -62,26 +62,48 @@
       </form>
 
       <?php
-      /* Auth area — Entrar / Olá, Nome */
-      if ( is_user_logged_in() ) :
-        $u = wp_get_current_user();
-        $first_name = $u->first_name ?: explode( ' ', $u->display_name )[0];
-        $logout_url = wp_logout_url( home_url( '/' ) );
-        $is_admin_user = current_user_can( 'manage_options' );
-        ?>
+      /* Auth area — Prioriza LEAD de Ferramentas (público) > WP admin (interno) */
+      $os_ferr_lead   = class_exists( 'Orick_Ferr_Auth' ) ? Orick_Ferr_Auth::current_lead() : null;
+      $os_wp_logged   = is_user_logged_in();
+      $os_show_user   = null; // 'lead' | 'wp' | null
+
+      if ( $os_ferr_lead ) {
+          $os_show_user = 'lead';
+          $os_first     = explode( ' ', $os_ferr_lead->nome )[0];
+      } elseif ( $os_wp_logged ) {
+          $os_show_user = 'wp';
+          $u = wp_get_current_user();
+          $os_first = $u->first_name ?: explode( ' ', $u->display_name )[0];
+      }
+
+      if ( $os_show_user ) : ?>
         <div class="os-auth">
           <div class="os-auth-greet">
             <button type="button" class="os-auth-greet-btn" aria-haspopup="menu" aria-expanded="false">
-              Olá, <strong><?php echo esc_html( $first_name ); ?></strong>
+              Olá, <strong><?php echo esc_html( $os_first ); ?></strong>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="os-auth-menu" role="menu">
-              <?php if ( $is_admin_user ) : ?>
-                <a href="<?php echo esc_url( admin_url() ); ?>">Painel</a>
+              <?php if ( $os_show_user === 'lead' ) :
+                $ferr_url  = home_url( '/ferramentas/' );
+                $logout_url = wp_nonce_url( add_query_arg( 'orick_ferr_action_link', 'logout', $ferr_url ), 'orick_ferr_logout' );
+                ?>
+                <a href="<?php echo esc_url( $ferr_url ); ?>">Minhas ferramentas</a>
+                <?php if ( $os_wp_logged && current_user_can( 'manage_options' ) ) : ?>
+                  <a href="<?php echo esc_url( admin_url() ); ?>">Painel (admin)</a>
+                <?php endif; ?>
+                <hr>
+                <a href="<?php echo esc_url( $logout_url ); ?>">Sair</a>
+              <?php else : /* WP admin only */
+                $logout_url = wp_logout_url( home_url( '/' ) );
+                ?>
+                <?php if ( current_user_can( 'manage_options' ) ) : ?>
+                  <a href="<?php echo esc_url( admin_url() ); ?>">Painel</a>
+                <?php endif; ?>
+                <a href="<?php echo esc_url( admin_url( 'profile.php' ) ); ?>">Meu perfil</a>
+                <hr>
+                <a href="<?php echo esc_url( $logout_url ); ?>">Sair</a>
               <?php endif; ?>
-              <a href="<?php echo esc_url( admin_url( 'profile.php' ) ); ?>">Meu perfil</a>
-              <hr>
-              <a href="<?php echo esc_url( $logout_url ); ?>">Sair</a>
             </div>
           </div>
         </div>
@@ -104,11 +126,10 @@
         })();
         </script>
       <?php else :
-        $login_url = wp_login_url( home_url( $_SERVER['REQUEST_URI'] ?? '/' ) );
-        // Se existe a página de login do plugin Ferramentas, usa ela
-        if ( function_exists( 'orick_tools_login_url' ) ) {
-          $login_url = orick_tools_login_url();
-        }
+        // Ninguém logado — manda pro login do plugin Ferramentas
+        $login_url = class_exists( 'Orick_Ferr_Auth' )
+          ? Orick_Ferr_Auth::login_url( $_SERVER['REQUEST_URI'] ?? '/' )
+          : wp_login_url( home_url( $_SERVER['REQUEST_URI'] ?? '/' ) );
         ?>
         <a href="<?php echo esc_url( $login_url ); ?>" class="os-auth-login">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
