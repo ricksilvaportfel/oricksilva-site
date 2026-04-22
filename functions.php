@@ -172,21 +172,21 @@ function orick_initials( $name ) {
    Cache de 300s (5min) mantém a gente MUITO abaixo disso.
    ========================================================= */
 function orick_fetch_quotes() {
-    $cache_key = 'orick_quotes_v3';
+    $cache_key = 'orick_quotes_v4';
     $cached    = get_transient( $cache_key );
     if ( $cached !== false && ! ( isset( $_GET['nocache'] ) && current_user_can( 'manage_options' ) ) ) {
         return $cached;
     }
 
     $out = [
-        'ibov'      => null,   // dados do Ibovespa + histórico
-        'stocks'    => [],     // lista de ações / ETFs
-        'currencies'=> [],     // moedas
+        'ibov'      => null,
+        'stocks'    => [],
+        'currencies'=> [],
     ];
 
-    // ---------- IBOVESPA + histórico (pro sparkline) ----------
+    // ---------- IBOVESPA + histórico ----------
     $ibov_url = 'https://brapi.dev/api/quote/^BVSP?range=1mo&interval=1d';
-    $r = wp_remote_get( $ibov_url, [ 'timeout' => 8, 'headers' => [ 'Accept' => 'application/json' ] ] );
+    $r = wp_remote_get( $ibov_url, [ 'timeout' => 15, 'headers' => [ 'Accept' => 'application/json' ] ] );
     if ( ! is_wp_error( $r ) && wp_remote_retrieve_response_code( $r ) === 200 ) {
         $d = json_decode( wp_remote_retrieve_body( $r ), true );
         if ( ! empty( $d['results'][0] ) ) {
@@ -208,7 +208,7 @@ function orick_fetch_quotes() {
         }
     }
 
-    // ---------- ÍNDICES / ETFs (lista) ----------
+    // ---------- ÍNDICES / ETFs — BATCH em 1 request ----------
     $stock_list = [
         'SMAL11' => 'Small Caps',
         'IVVB11' => 'S&P 500',
@@ -216,19 +216,29 @@ function orick_fetch_quotes() {
         'HASH11' => 'Cripto Index',
         'PETR4'  => 'Petrobras',
     ];
-    foreach ( $stock_list as $sym => $name ) {
-        $u = 'https://brapi.dev/api/quote/' . rawurlencode( $sym );
-        $rr = wp_remote_get( $u, [ 'timeout' => 6, 'headers' => [ 'Accept' => 'application/json' ] ] );
-        if ( is_wp_error( $rr ) || wp_remote_retrieve_response_code( $rr ) !== 200 ) continue;
-        $dd = json_decode( wp_remote_retrieve_body( $rr ), true );
-        if ( empty( $dd['results'][0] ) ) continue;
-        $rw = $dd['results'][0];
-        $out['stocks'][] = [
-            'symbol' => $sym,
-            'name'   => $name,
-            'price'  => isset( $rw['regularMarketPrice'] ) ? (float) $rw['regularMarketPrice'] : null,
-            'chg'    => isset( $rw['regularMarketChangePercent'] ) ? (float) $rw['regularMarketChangePercent'] : null,
-        ];
+    $stock_syms_qs = implode( ',', array_keys( $stock_list ) );
+    $stock_url = 'https://brapi.dev/api/quote/' . rawurlencode( $stock_syms_qs );
+    $sr = wp_remote_get( $stock_url, [ 'timeout' => 15, 'headers' => [ 'Accept' => 'application/json' ] ] );
+    if ( ! is_wp_error( $sr ) && wp_remote_retrieve_response_code( $sr ) === 200 ) {
+        $sd = json_decode( wp_remote_retrieve_body( $sr ), true );
+        if ( ! empty( $sd['results'] ) ) {
+            // Mantém a ordem definida em $stock_list
+            $by_sym = [];
+            foreach ( $sd['results'] as $rr ) {
+                $sym = $rr['symbol'] ?? '';
+                if ( isset( $stock_list[ $sym ] ) ) $by_sym[ $sym ] = $rr;
+            }
+            foreach ( $stock_list as $sym => $name ) {
+                if ( ! isset( $by_sym[ $sym ] ) ) continue;
+                $rw = $by_sym[ $sym ];
+                $out['stocks'][] = [
+                    'symbol' => $sym,
+                    'name'   => $name,
+                    'price'  => isset( $rw['regularMarketPrice'] ) ? (float) $rw['regularMarketPrice'] : null,
+                    'chg'    => isset( $rw['regularMarketChangePercent'] ) ? (float) $rw['regularMarketChangePercent'] : null,
+                ];
+            }
+        }
     }
 
     // ---------- MOEDAS ----------
@@ -240,7 +250,7 @@ function orick_fetch_quotes() {
     ];
     $curr_qs  = implode( ',', array_keys( $curr_list ) );
     $curr_url = 'https://brapi.dev/api/v2/currency?currency=' . rawurlencode( $curr_qs );
-    $cr = wp_remote_get( $curr_url, [ 'timeout' => 6, 'headers' => [ 'Accept' => 'application/json' ] ] );
+    $cr = wp_remote_get( $curr_url, [ 'timeout' => 15, 'headers' => [ 'Accept' => 'application/json' ] ] );
     if ( ! is_wp_error( $cr ) && wp_remote_retrieve_response_code( $cr ) === 200 ) {
         $cd = json_decode( wp_remote_retrieve_body( $cr ), true );
         if ( ! empty( $cd['currency'] ) ) {
