@@ -271,12 +271,33 @@ $cat_rows = [
   [ 'slug' => 'ferramentas', 'title' => 'Ferramentas', 'link' => 'Ver ferramentas' ],
 ];
 foreach ( $cat_rows as $row ) :
-  $q = orick_get_posts_by_cat( $row['slug'], 4 );
+  // Se for "ferramentas" e o plugin Orick Ferramentas estiver ativo, usa o CPT próprio
+  if ( $row['slug'] === 'ferramentas' && post_type_exists( 'ferramenta' ) ) {
+      $q = new WP_Query( [
+          'post_type'      => 'ferramenta',
+          'posts_per_page' => 4,
+          'post_status'    => 'publish',
+          'meta_query'     => [ [
+              'key'     => '_orick_destaque_home',
+              'value'   => '1',
+              'compare' => '=',
+          ] ],
+      ] );
+      // Fallback: se nenhuma marcada, pega as 4 mais recentes
+      if ( ! $q->have_posts() ) {
+          wp_reset_postdata();
+          $q = new WP_Query( [ 'post_type' => 'ferramenta', 'posts_per_page' => 4, 'post_status' => 'publish' ] );
+      }
+      $row['link_url'] = get_post_type_archive_link( 'ferramenta' );
+  } else {
+      $q = orick_get_posts_by_cat( $row['slug'], 4 );
+      $row['link_url'] = home_url( '/categoria/' . $row['slug'] . '/' );
+  }
 ?>
   <section class="os-wrap os-cat-row">
     <div class="os-sec-head" style="padding-top:0;">
       <h2 class="os-sec-title"><?php echo esc_html( $row['title'] ); ?></h2>
-      <a href="<?php echo esc_url( home_url( '/categoria/' . $row['slug'] . '/' ) ); ?>" class="os-sec-link"><?php echo esc_html( $row['link'] ); ?> →</a>
+      <a href="<?php echo esc_url( $row['link_url'] ); ?>" class="os-sec-link"><?php echo esc_html( $row['link'] ); ?> →</a>
     </div>
     <div class="os-cards-grid">
       <?php if ( $q->have_posts() ) : while ( $q->have_posts() ) : $q->the_post(); ?>
