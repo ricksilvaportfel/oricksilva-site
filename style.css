@@ -1246,3 +1246,176 @@ body.oricksilva .os-related-date {
   body.oricksilva .os-article-author-box { flex-direction: column; align-items: flex-start; }
   body.oricksilva .os-related-grid { grid-template-columns: 1fr; }
 }
+
+
+/* ===========================
+   ARCHIVE (listagens de artigos, categorias, tags, busca, autor)
+   =========================== */
+body.oricksilva .os-archive { padding: 40px 0 80px; }
+
+/* Cabeçalho */
+body.oricksilva .os-archive-head { padding: 40px 32px 28px; border-bottom: 1px solid var(--hair); margin-bottom: 40px; }
+body.oricksilva .os-archive-kicker {
+  display: inline-block;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text-mute); margin-bottom: 14px;
+}
+body.oricksilva .os-archive-title {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: clamp(40px, 6vw, 68px);
+  font-weight: 400; line-height: 1.02; letter-spacing: -0.02em;
+  margin: 0 0 16px; color: var(--text);
+}
+body.oricksilva .os-archive-title em { font-style: italic; color: var(--text-dim); font-weight: 400; }
+body.oricksilva .os-archive-desc {
+  max-width: 640px; font-size: 16px; color: var(--text-dim); line-height: 1.55;
+}
+
+/* Filtros horizontais */
+body.oricksilva .os-archive-filters {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-bottom: 48px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--hair);
+  padding-left: 32px; padding-right: 32px;
+}
+body.oricksilva .os-filter-chip {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 8px 14px; color: var(--text-mute);
+  border: 1px solid transparent; transition: all .15s;
+}
+body.oricksilva .os-filter-chip:hover { color: var(--text); border-color: var(--hair); }
+body.oricksilva .os-filter-chip.is-active { color: var(--text); border-color: var(--accent); }
+
+/* Topo editorial (1 grande + 2 médios) */
+body.oricksilva .os-archive-top {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 32px;
+  margin-bottom: 72px;
+  padding: 0 32px;
+}
+body.oricksilva .os-top-card { display: flex; flex-direction: column; color: inherit; text-decoration: none; transition: opacity .2s; }
+body.oricksilva .os-top-card:hover { opacity: .9; }
+body.oricksilva .os-top-card:hover .os-top-title { color: var(--accent); }
+body.oricksilva .os-top-card.is-hero { grid-row: 1 / span 2; grid-column: 1; }
+body.oricksilva .os-top-card.is-side { grid-column: 2; }
+
+body.oricksilva .os-top-img { aspect-ratio: 16/10; overflow: hidden; background: var(--bg-raised); margin-bottom: 16px; }
+body.oricksilva .os-top-card.is-side .os-top-img { aspect-ratio: 16/9; }
+body.oricksilva .os-top-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+body.oricksilva .os-top-body { display: flex; flex-direction: column; gap: 10px; }
+body.oricksilva .os-top-cat {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10.5px; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--accent);
+}
+body.oricksilva .os-top-title {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 400; letter-spacing: -0.015em; line-height: 1.1;
+  margin: 0; color: var(--text);
+  transition: color .15s;
+}
+body.oricksilva .os-top-card.is-hero .os-top-title { font-size: clamp(28px, 3vw, 40px); }
+body.oricksilva .os-top-card.is-side .os-top-title { font-size: 20px; line-height: 1.2; }
+body.oricksilva .os-top-sub { font-size: 15px; color: var(--text-dim); line-height: 1.5; margin: 0; }
+body.oricksilva .os-top-meta {
+  display: flex; gap: 8px; align-items: center;
+  font-size: 12px; color: var(--text-mute);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  letter-spacing: 0.05em;
+}
+body.oricksilva .os-meta-sep { opacity: .5; }
+
+/* Grid minimalista de cards */
+body.oricksilva .os-archive-grid-wrap { padding: 0 32px; }
+body.oricksilva .os-archive-subhead {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 14px; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  margin: 0 0 28px; padding-bottom: 14px;
+  border-bottom: 1px solid var(--hair);
+  color: var(--text-dim);
+}
+body.oricksilva .os-archive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 40px 28px;
+}
+body.oricksilva .os-card { min-width: 0; }
+body.oricksilva .os-card-link { display: block; color: inherit; text-decoration: none; }
+body.oricksilva .os-card-img {
+  aspect-ratio: 4/3; overflow: hidden; background: var(--bg-raised);
+  margin-bottom: 12px;
+}
+body.oricksilva .os-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s; }
+body.oricksilva .os-card-link:hover .os-card-img img { transform: scale(1.03); }
+body.oricksilva .os-card-link:hover .os-card-title { color: var(--accent); }
+body.oricksilva .os-card-body { display: flex; flex-direction: column; gap: 6px; }
+body.oricksilva .os-card-cat {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--accent);
+}
+body.oricksilva .os-card-title {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 17px; font-weight: 400;
+  line-height: 1.22; letter-spacing: -0.005em;
+  margin: 2px 0 0; color: var(--text);
+  transition: color .15s;
+}
+body.oricksilva .os-card-meta {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11px; color: var(--text-mute); letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+
+/* Placeholder quando não tem thumb */
+body.oricksilva .os-img-placeholder {
+  background: linear-gradient(135deg, var(--bg-raised) 0%, var(--bg-accent) 100%);
+  position: relative;
+}
+body.oricksilva .os-img-placeholder::after {
+  content: ""; position: absolute; inset: 0;
+  background: repeating-linear-gradient(45deg, transparent 0 8px, rgba(228,216,199,0.03) 8px 16px);
+}
+
+/* Carregar mais */
+body.oricksilva .os-archive-more { display: flex; justify-content: center; padding: 60px 0 20px; }
+body.oricksilva .os-btn-ghost {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+  padding: 14px 28px; color: var(--text);
+  border: 1px solid var(--hair-strong);
+  background: transparent; cursor: pointer;
+  transition: all .15s;
+}
+body.oricksilva .os-btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+body.oricksilva .os-btn-ghost:disabled { opacity: .4; cursor: not-allowed; }
+
+/* Estado vazio */
+body.oricksilva .os-archive-empty { padding: 80px 32px; text-align: center; color: var(--text-dim); }
+body.oricksilva .os-archive-empty h2 { font-size: 32px; margin: 0 0 12px; color: var(--text); }
+body.oricksilva .os-archive-empty a { color: var(--accent); text-decoration: underline; }
+
+/* Responsivo */
+@media (max-width: 960px) {
+  body.oricksilva .os-archive-top {
+    grid-template-columns: 1fr; gap: 28px;
+  }
+  body.oricksilva .os-top-card.is-hero { grid-row: auto; grid-column: auto; }
+  body.oricksilva .os-top-card.is-side { grid-column: auto; }
+  body.oricksilva .os-archive-title { font-size: 44px !important; }
+}
+@media (max-width: 560px) {
+  body.oricksilva .os-archive-head { padding: 24px 20px 20px; }
+  body.oricksilva .os-archive-filters,
+  body.oricksilva .os-archive-top,
+  body.oricksilva .os-archive-grid-wrap { padding-left: 20px; padding-right: 20px; }
+  body.oricksilva .os-archive-grid { gap: 32px 20px; }
+  body.oricksilva .os-archive-title { font-size: 32px !important; }
+}

@@ -390,3 +390,114 @@ function orick_fmt_chg( $pct ) {
     $sign = $pct >= 0 ? '+' : '';
     return $sign . number_format( $pct, 2, ',', '.' ) . '%';
 }
+
+
+/* =========================================================
+   ARCHIVE: endpoint AJAX "Carregar mais"
+   ========================================================= */
+
+// Injeta o endpoint no head do arquivo (só em arquivos/categorias/tag/autor/search)
+add_action( 'wp_footer', function() {
+    if ( ! ( is_archive() || is_home() || is_search() ) ) return;
+    $ajax_url = esc_js( admin_url( 'admin-ajax.php' ) );
+    $nonce    = wp_create_nonce( 'oricksilva_load_more' );
+    ?>
+    <script>
+    (function(){
+      var btn = document.getElementById('os-load-more');
+      if (!btn) return;
+      btn.addEventListener('click', function() {
+        var page = parseInt(btn.dataset.page || '1', 10);
+        var max  = parseInt(btn.dataset.max || '1', 10);
+        var q    = btn.dataset.query || '{}';
+        btn.disabled = true;
+        btn.textContent = 'Carregando…';
+
+        var body = new URLSearchParams();
+        body.append('action', 'oricksilva_load_more');
+        body.append('nonce', '<?php echo $nonce; ?>');
+        body.append('page', page + 1);
+        body.append('query', q);
+
+        fetch('<?php echo $ajax_url; ?>', { method: 'POST', body: body })
+          .then(function(r){ return r.json(); })
+          .then(function(data){
+            if (data && data.success && data.html) {
+              var grid = document.getElementById('os-archive-grid');
+              var temp = document.createElement('div');
+              temp.innerHTML = data.html;
+              while (temp.firstChild) grid.appendChild(temp.firstChild);
+              btn.dataset.page = (page + 1).toString();
+              if ((page + 1) >= max) {
+                btn.remove();
+              } else {
+                btn.disabled = false;
+                btn.textContent = 'Carregar mais';
+              }
+            } else {
+              btn.textContent = 'Nada mais a carregar';
+              btn.disabled = true;
+            }
+          })
+          .catch(function(){
+            btn.disabled = false;
+            btn.textContent = 'Erro — tentar de novo';
+          });
+      });
+    })();
+    </script>
+    <?php
+}, 99 );
+
+add_action( 'wp_ajax_oricksilva_load_more', 'oricksilva_ajax_load_more' );
+add_action( 'wp_ajax_nopriv_oricksilva_load_more', 'oricksilva_ajax_load_more' );
+function oricksilva_ajax_load_more() {
+    check_ajax_referer( 'oricksilva_load_more', 'nonce' );
+    $page  = max( 1, intval( $_POST['page'] ?? 2 ) );
+    $q_raw = json_decode( stripslashes( $_POST['query'] ?? '{}' ), true );
+    $q_raw = is_array( $q_raw ) ? $q_raw : [];
+
+    $args = [
+        'post_type'      => 'post',
+        'posts_per_page' => intval( get_option( 'posts_per_page', 12 ) ),
+        'paged'          => $page,
+    ];
+    if ( ! empty( $q_raw['cat'] ) )    $args['cat']    = intval( $q_raw['cat'] );
+    if ( ! empty( $q_raw['tag_id'] ) ) $args['tag_id'] = intval( $q_raw['tag_id'] );
+    if ( ! empty( $q_raw['author'] ) ) $args['author'] = intval( $q_raw['author'] );
+    if ( ! empty( $q_raw['s'] ) )      $args['s']      = sanitize_text_field( $q_raw['s'] );
+
+    $q = new WP_Query( $args );
+    if ( ! $q->have_posts() ) {
+        wp_send_json_success( [ 'html' => '' ] );
+    }
+
+    ob_start();
+    while ( $q->have_posts() ) : $q->the_post();
+        $cats_p = get_the_category();
+        $cat_p  = $cats_p ? $cats_p[0] : null;
+        ?>
+        <article class="os-card">
+          <a href="<?php the_permalink(); ?>" class="os-card-link">
+            <?php if ( has_post_thumbnail() ) : ?>
+              <div class="os-card-img"><?php the_post_thumbnail( 'medium' ); ?></div>
+            <?php else : ?>
+              <div class="os-card-img os-img-placeholder"></div>
+            <?php endif; ?>
+            <div class="os-card-body">
+              <?php if ( $cat_p ) : ?>
+                <span class="os-card-cat"><?php echo esc_html( mb_strtoupper( $cat_p->name ) ); ?></span>
+              <?php endif; ?>
+              <h3 class="os-card-title"><?php the_title(); ?></h3>
+              <div class="os-card-meta">
+                <time datetime="<?php echo esc_attr( get_the_date( 'c' ) ); ?>"><?php echo esc_html( get_the_date( 'd/m' ) ); ?></time>
+              </div>
+            </div>
+          </a>
+        </article>
+        <?php
+    endwhile;
+    wp_reset_postdata();
+    $html = ob_get_clean();
+    wp_send_json_success( [ 'html' => $html ] );
+}
