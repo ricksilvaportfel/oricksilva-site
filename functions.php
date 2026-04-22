@@ -273,6 +273,37 @@ function orick_fetch_quotes() {
    ========================================================= */
 add_action( 'customize_register', function( $wp_customize ) {
 
+    /* SEÇÃO: Logo do site */
+    $wp_customize->add_section( 'os_logo', [
+        'title'       => __( 'Logo do cabeçalho', 'oricksilva' ),
+        'priority'    => 25,
+        'description' => 'Suba uma imagem (PNG/SVG) para substituir o logo padrão "RS O Rick Silva". Deixe vazio para voltar ao logo padrão.',
+    ] );
+
+    $wp_customize->add_setting( 'os_logo_image', [
+        'default'           => '',
+        'sanitize_callback' => 'esc_url_raw',
+        'transport'         => 'refresh',
+    ] );
+    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, 'os_logo_image', [
+        'label'    => 'Imagem do logo',
+        'section'  => 'os_logo',
+        'settings' => 'os_logo_image',
+    ] ) );
+
+    $wp_customize->add_setting( 'os_logo_height', [
+        'default'           => 32,
+        'sanitize_callback' => 'absint',
+        'transport'         => 'refresh',
+    ] );
+    $wp_customize->add_control( 'os_logo_height', [
+        'label'       => 'Altura do logo (px)',
+        'description' => 'Entre 20 e 60 pixels',
+        'section'     => 'os_logo',
+        'type'        => 'number',
+        'input_attrs' => [ 'min' => 20, 'max' => 60, 'step' => 1 ],
+    ] );
+
     /* SEÇÃO: Newsletter na lateral dos artigos */
     $wp_customize->add_section( 'os_news_sidebar', [
         'title'       => __( 'Newsletter (sidebar dos artigos)', 'oricksilva' ),
