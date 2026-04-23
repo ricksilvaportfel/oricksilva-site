@@ -39,7 +39,6 @@
     } else {
         echo '<ul class="os-nav">';
         $default_nav = [
-            'Início' => home_url('/'),
             'Artigos' => home_url('/categoria/artigos/'),
             'Colunistas' => home_url('/categoria/colunistas/'),
             'Materiais' => home_url('/categoria/materiais/'),
