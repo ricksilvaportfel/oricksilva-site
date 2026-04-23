@@ -472,31 +472,27 @@ $podcast_q     = new WP_Query( [
 
 <?php
 /* ---------- EVENTOS ---------- */
-$eventos_q = orick_get_posts_by_cat( 'eventos', 1 );
+$next_event_id = 0;
+if ( function_exists( 'oricksilva_next_events_query' ) ) {
+    $eventos_q = oricksilva_next_events_query( 1 );
+    if ( $eventos_q->have_posts() ) {
+        $eventos_q->the_post();
+        $next_event_id = get_the_ID();
+        wp_reset_postdata();
+    }
+}
 ?>
 <section class="os-eventos">
   <div class="os-wrap">
     <div class="os-sec-head" style="padding-top:0;">
       <h2 class="os-sec-title">Eventos</h2>
-      <a href="<?php echo esc_url( home_url('/categoria/eventos/') ); ?>" class="os-sec-link">Calendário completo →</a>
+      <a href="<?php echo esc_url( function_exists( 'post_type_exists' ) && post_type_exists( 'evento' ) ? get_post_type_archive_link( 'evento' ) : home_url( '/eventos/' ) ); ?>" class="os-sec-link">Calendário completo →</a>
     </div>
-    <?php if ( $eventos_q->have_posts() ) : $eventos_q->the_post(); ?>
-      <div class="os-evento-card">
-        <div class="os-evento-art">
-          <?php if ( has_post_thumbnail() ) the_post_thumbnail( 'large' ); ?>
-        </div>
-        <div class="os-evento-body">
-          <div class="os-evento-date"><?php echo esc_html( get_the_date( 'd \d\e F, Y' ) ); ?></div>
-          <h3 class="os-evento-title"><?php the_title(); ?></h3>
-          <div style="color:var(--text-dim);font-size:15px;line-height:1.55;"><?php echo wp_trim_words( get_the_excerpt(), 40 ); ?></div>
-          <div style="display:flex;gap:10px;margin-top:8px;">
-            <a href="<?php the_permalink(); ?>" class="os-btn">Saber mais</a>
-          </div>
-        </div>
-      </div>
+    <?php if ( $next_event_id && function_exists( 'oricksilva_render_event_card' ) ) : ?>
+      <?php oricksilva_render_event_card( $next_event_id, 'hero' ); ?>
     <?php else : ?>
-      <p style="color:var(--text-mute);font-size:12px;">Publique na categoria <code>eventos</code>.</p>
-    <?php endif; wp_reset_postdata(); ?>
+      <p style="color:var(--text-mute);font-size:12px;">Cadastre um evento em <strong>Eventos → Adicionar novo</strong>.</p>
+    <?php endif; ?>
   </div>
 </section>
 
