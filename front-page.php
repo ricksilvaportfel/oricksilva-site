@@ -294,28 +294,39 @@ foreach ( $cat_rows as $row ) :
       $row['link_url'] = home_url( '/categoria/' . $row['slug'] . '/' );
   }
 ?>
+  <?php $is_tools = ( $row['slug'] === 'ferramentas' && function_exists( 'oricksilva_render_tool_card' ) ); ?>
   <section class="os-wrap os-cat-row">
     <div class="os-sec-head" style="padding-top:0;">
       <h2 class="os-sec-title"><?php echo esc_html( $row['title'] ); ?></h2>
       <a href="<?php echo esc_url( $row['link_url'] ); ?>" class="os-sec-link"><?php echo esc_html( $row['link'] ); ?> →</a>
     </div>
-    <div class="os-cards-grid">
+    <div class="<?php echo $is_tools ? 'tool-grid tool-grid--home' : 'os-cards-grid'; ?>">
       <?php if ( $q->have_posts() ) : while ( $q->have_posts() ) : $q->the_post(); ?>
-        <a class="os-card" href="<?php the_permalink(); ?>">
-          <div class="os-card-img">
-            <?php if ( has_post_thumbnail() ) the_post_thumbnail( 'medium_large' );
-            else echo '<div class="os-fallback"></div>'; ?>
-          </div>
-          <div class="os-card-cat"><?php echo esc_html( $row['title'] ); ?></div>
-          <div class="os-card-title"><?php the_title(); ?></div>
-          <div class="os-card-meta">
-            <span><?php the_author(); ?></span>
-            <span class="os-dot"></span>
-            <span><?php echo esc_html( orick_reading_time() ); ?></span>
-          </div>
-        </a>
+        <?php if ( $is_tools ) : ?>
+          <?php oricksilva_render_tool_card( get_the_ID() ); ?>
+        <?php else : ?>
+          <a class="os-card" href="<?php the_permalink(); ?>">
+            <div class="os-card-img">
+              <?php if ( has_post_thumbnail() ) the_post_thumbnail( 'medium_large' );
+              else echo '<div class="os-fallback"></div>'; ?>
+            </div>
+            <div class="os-card-cat"><?php echo esc_html( $row['title'] ); ?></div>
+            <div class="os-card-title"><?php the_title(); ?></div>
+            <div class="os-card-meta">
+              <span><?php the_author(); ?></span>
+              <span class="os-dot"></span>
+              <span><?php echo esc_html( orick_reading_time() ); ?></span>
+            </div>
+          </a>
+        <?php endif; ?>
       <?php endwhile; else : ?>
-        <p style="color:var(--text-mute);font-size:12px;grid-column:1/-1;">Publique posts na categoria <code><?php echo esc_html( $row['slug'] ); ?></code>.</p>
+        <p style="color:var(--text-mute);font-size:12px;grid-column:1/-1;">
+          <?php if ( $is_tools ) : ?>
+            Cadastre uma ferramenta em <strong>Ferramentas → Adicionar nova</strong>.
+          <?php else : ?>
+            Publique posts na categoria <code><?php echo esc_html( $row['slug'] ); ?></code>.
+          <?php endif; ?>
+        </p>
       <?php endif; wp_reset_postdata(); ?>
     </div>
   </section>
