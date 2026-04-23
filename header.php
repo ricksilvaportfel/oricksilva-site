@@ -11,7 +11,7 @@
 <header class="os-topbar">
   <div class="os-wrap os-topbar-inner">
     <div class="os-brand">
-      <button class="os-icon-btn" aria-label="Menu">
+      <button class="os-icon-btn os-menu-toggle" aria-label="Abrir menu" aria-expanded="false" aria-controls="os-mobile-menu" type="button">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="15" y2="17"/></svg>
       </button>
       <a href="<?php echo esc_url( home_url( '/' ) ); ?>" style="display:flex;align-items:center;gap:10px;">
@@ -53,6 +53,10 @@
         echo '</ul>';
     }
     ?>
+
+    <button class="os-mobile-close" aria-label="Fechar menu" type="button">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="6" y1="18" x2="18" y2="6"/></svg>
+    </button>
 
     <div class="os-header-right">
       <form class="os-search" role="search" method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>">
@@ -140,6 +144,23 @@
     </div>
   </div>
 </header>
+
+<script>
+(function(){
+  var body = document.body;
+  var toggle = document.querySelector('.os-menu-toggle');
+  var close  = document.querySelector('.os-mobile-close');
+  if (!toggle) return;
+  function open(){  body.classList.add('is-menu-open');    toggle.setAttribute('aria-expanded','true');  }
+  function shut(){  body.classList.remove('is-menu-open'); toggle.setAttribute('aria-expanded','false'); }
+  toggle.addEventListener('click', function(){ body.classList.contains('is-menu-open') ? shut() : open(); });
+  if (close) close.addEventListener('click', shut);
+  // Clicar num link do menu fecha
+  document.querySelectorAll('.os-nav a, .os-subnav-inner a').forEach(function(a){ a.addEventListener('click', shut); });
+  // ESC fecha
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') shut(); });
+})();
+</script>
 
 <div class="os-subnav">
   <div class="os-wrap os-subnav-inner">

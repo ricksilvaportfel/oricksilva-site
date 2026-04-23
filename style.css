@@ -129,6 +129,20 @@ body.oricksilva button { font-family: inherit; cursor: pointer; border: none; ba
 }
 .os-icon-btn:hover { color: var(--text); border-color: var(--hair-strong); }
 
+/* Hambúrguer só aparece em mobile */
+@media (min-width: 721px) { .os-menu-toggle { display: none !important; } }
+
+/* Botão X (fechar menu mobile) — hidden por padrão */
+.os-mobile-close {
+  display: none;
+  position: fixed; top: 20px; right: 20px; z-index: 101;
+  width: 40px; height: 40px;
+  background: transparent; border: 1px solid var(--hair-strong);
+  color: var(--text); cursor: pointer;
+  place-items: center;
+}
+.os-mobile-close:hover { border-color: var(--accent); color: var(--accent); }
+
 .os-subnav { background: var(--bg-accent); border-bottom: 1px solid var(--hair); }
 .os-subnav-inner {
   display: flex !important; align-items: center; gap: 28px;
@@ -605,7 +619,39 @@ body.oricksilva .os-mkt-foot {
   .os-footer-grid { grid-template-columns: 1fr 1fr; }
   .os-h-lead { font-size: 28px; }
   .os-newsletter-cta h2 { font-size: 30px; }
-  .os-nav, .os-search { display: none; }
+  .os-search { display: none; }
+
+  /* Menu mobile: overlay lateral com slide-in */
+  .os-nav {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    position: fixed; inset: 0;
+    background: var(--bg);
+    padding: 80px 28px 40px;
+    margin: 0;
+    gap: 0;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform .28s ease;
+    overflow-y: auto;
+    list-style: none;
+  }
+  .os-nav li { border-bottom: 1px solid var(--hair); }
+  .os-nav li:last-child { border-bottom: 0; }
+  .os-nav a {
+    display: block;
+    padding: 20px 0;
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 22px;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .os-nav a:hover { color: var(--accent); }
+
+  body.is-menu-open .os-nav { transform: translateX(0); }
+  body.is-menu-open .os-mobile-close { display: grid; }
+  body.is-menu-open { overflow: hidden; }
 }
 
 

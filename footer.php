@@ -14,10 +14,17 @@
 
     <div class="os-footer-grid">
       <div class="os-footer-brand">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div class="os-brand-mark">RS</div>
-          <div class="os-brand-name">O <em>Rick</em> Silva</div>
-        </div>
+        <a href="<?php echo esc_url( home_url( '/' ) ); ?>" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;">
+          <?php
+          $os_logo_url = get_theme_mod( 'os_logo_image', '' );
+          $os_logo_h   = intval( get_theme_mod( 'os_logo_height', 40 ) );
+          if ( $os_logo_url ) : ?>
+            <img src="<?php echo esc_url( $os_logo_url ); ?>" alt="<?php bloginfo( 'name' ); ?>" style="max-height:<?php echo esc_attr( $os_logo_h ); ?>px;">
+          <?php else : ?>
+            <div class="os-brand-mark">RS</div>
+            <div class="os-brand-name">O <em>Rick</em> Silva</div>
+          <?php endif; ?>
+        </a>
         <p>Conteúdo editorial para assessores de investimentos e quem quer pensar sobre dinheiro com a cabeça mais fria.</p>
         <div class="os-footer-socials">
           <a href="#">IG</a><a href="#">YT</a><a href="#">IN</a><a href="#">X</a><a href="#">TG</a><a href="#">SP</a>
