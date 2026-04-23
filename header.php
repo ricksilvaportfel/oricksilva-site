@@ -182,7 +182,7 @@
             'Corporate'          => 'corporate',
             'Carreira'           => 'carreira',
             'Planejamento'       => 'planejamento',
-            'Comportamental'     => 'comportamental',
+            'Comercial'          => 'comercial',
         ];
         foreach ( $sub as $label => $slug ) {
             printf(
