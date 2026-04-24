@@ -26,9 +26,16 @@
           <?php endif; ?>
         </a>
         <p>Conteúdo editorial para assessores de investimentos e quem quer pensar sobre dinheiro com a cabeça mais fria.</p>
-        <div class="os-footer-socials">
-          <a href="#">IG</a><a href="#">YT</a><a href="#">IN</a><a href="#">X</a><a href="#">TG</a><a href="#">SP</a>
-        </div>
+        <?php $os_profiles = function_exists( 'os_social_profiles' ) ? os_social_profiles() : []; ?>
+        <?php if ( $os_profiles ) : ?>
+          <div class="os-footer-socials">
+            <?php foreach ( $os_profiles as $key => $p ) : ?>
+              <a href="<?php echo esc_url( $p['url'] ); ?>" target="_blank" rel="noopener me" aria-label="<?php echo esc_attr( $p['label'] ); ?>" title="<?php echo esc_attr( $p['label'] ); ?>">
+                <?php echo os_social_icon_svg( $key ); ?>
+              </a>
+            <?php endforeach; ?>
+          </div>
+        <?php endif; ?>
       </div>
 
       <?php

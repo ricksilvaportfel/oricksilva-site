@@ -390,7 +390,154 @@ add_action( 'customize_register', function( $wp_customize ) {
         ] );
     }
 
+    /* SEÇÃO: Redes sociais (perfis — aparecem no footer) */
+    $wp_customize->add_section( 'os_socials', [
+        'title'       => __( 'Redes sociais (perfis)', 'oricksilva' ),
+        'priority'    => 40,
+        'description' => 'URLs dos seus perfis. Só as redes com URL preenchida aparecem no rodapé.',
+    ] );
+    foreach ( os_social_networks_catalog() as $key => $meta ) {
+        $id = 'os_social_' . $key;
+        $wp_customize->add_setting( $id, [
+            'default'           => '',
+            'sanitize_callback' => 'esc_url_raw',
+            'transport'         => 'refresh',
+        ] );
+        $wp_customize->add_control( $id, [
+            'label'   => $meta['label'],
+            'section' => 'os_socials',
+            'type'    => 'url',
+        ] );
+    }
+
+    /* SEÇÃO: Compartilhar (botões que aparecem nos posts) */
+    $wp_customize->add_section( 'os_share', [
+        'title'       => __( 'Botões de compartilhar', 'oricksilva' ),
+        'priority'    => 45,
+        'description' => 'Quais canais aparecem na barra de compartilhar de cada artigo (topo e lateral).',
+    ] );
+    foreach ( os_share_channels_catalog() as $key => $meta ) {
+        $id = 'os_share_' . $key;
+        $wp_customize->add_setting( $id, [
+            'default'           => in_array( $key, [ 'copy', 'whatsapp', 'twitter', 'linkedin' ], true ) ? 1 : 0,
+            'sanitize_callback' => function( $v ) { return $v ? 1 : 0; },
+            'transport'         => 'refresh',
+        ] );
+        $wp_customize->add_control( $id, [
+            'label'   => $meta['label'],
+            'section' => 'os_share',
+            'type'    => 'checkbox',
+        ] );
+    }
+
 } );
+
+/* =========================================================
+   REDES SOCIAIS — catálogo + helpers
+   ========================================================= */
+function os_social_networks_catalog() {
+    return [
+        'instagram' => [ 'label' => 'Instagram' ],
+        'youtube'   => [ 'label' => 'YouTube'   ],
+        'linkedin'  => [ 'label' => 'LinkedIn'  ],
+        'twitter'   => [ 'label' => 'Twitter / X' ],
+        'telegram'  => [ 'label' => 'Telegram'  ],
+        'spotify'   => [ 'label' => 'Spotify'   ],
+        'tiktok'    => [ 'label' => 'TikTok'    ],
+        'facebook'  => [ 'label' => 'Facebook'  ],
+    ];
+}
+
+function os_share_channels_catalog() {
+    return [
+        'copy'     => [ 'label' => 'Copiar link' ],
+        'whatsapp' => [ 'label' => 'WhatsApp'    ],
+        'twitter'  => [ 'label' => 'Twitter / X' ],
+        'linkedin' => [ 'label' => 'LinkedIn'    ],
+        'telegram' => [ 'label' => 'Telegram'    ],
+        'facebook' => [ 'label' => 'Facebook'    ],
+        'email'    => [ 'label' => 'E-mail'      ],
+    ];
+}
+
+/** Retorna só os perfis sociais com URL preenchida. */
+function os_social_profiles() {
+    $out = [];
+    foreach ( os_social_networks_catalog() as $key => $meta ) {
+        $url = get_theme_mod( 'os_social_' . $key, '' );
+        if ( $url ) $out[ $key ] = [ 'label' => $meta['label'], 'url' => $url ];
+    }
+    return $out;
+}
+
+/** Retorna só os canais de share ativados. */
+function os_share_channels_enabled() {
+    $out = [];
+    foreach ( os_share_channels_catalog() as $key => $meta ) {
+        if ( get_theme_mod( 'os_share_' . $key, in_array( $key, [ 'copy', 'whatsapp', 'twitter', 'linkedin' ], true ) ? 1 : 0 ) ) {
+            $out[ $key ] = $meta['label'];
+        }
+    }
+    return $out;
+}
+
+/** Monta a URL de share do post atual para um canal. */
+function os_build_share_url( $channel ) {
+    $title = get_the_title();
+    $url   = get_permalink();
+    $text  = rawurlencode( $title );
+    $link  = rawurlencode( $url );
+    $full  = rawurlencode( $title . ' ' . $url );
+    switch ( $channel ) {
+        case 'whatsapp': return 'https://wa.me/?text=' . $full;
+        case 'twitter':  return 'https://twitter.com/intent/tweet?text=' . $text . '&url=' . $link;
+        case 'linkedin': return 'https://www.linkedin.com/sharing/share-offsite/?url=' . $link;
+        case 'telegram': return 'https://t.me/share/url?url=' . $link . '&text=' . $text;
+        case 'facebook': return 'https://www.facebook.com/sharer/sharer.php?u=' . $link;
+        case 'email':    return 'mailto:?subject=' . $text . '&body=' . $full;
+    }
+    return '';
+}
+
+/** Renderiza os botões de share ativos (usa a mesma markup em barra horizontal e rail vertical). */
+function os_render_share_buttons() {
+    $html = '';
+    foreach ( os_share_channels_enabled() as $key => $label ) {
+        $svg = os_social_icon_svg( $key );
+        if ( $key === 'copy' ) {
+            $html .= sprintf(
+                '<button type="button" class="os-share-btn" data-action="copy" title="Copiar link" aria-label="Copiar link">%s</button>',
+                $svg
+            );
+            continue;
+        }
+        $url = os_build_share_url( $key );
+        if ( ! $url ) continue;
+        $html .= sprintf(
+            '<a href="%s" target="_blank" rel="noopener" class="os-share-btn" title="Compartilhar no %s" aria-label="%s">%s</a>',
+            esc_url( $url ), esc_attr( $label ), esc_attr( $label ), $svg
+        );
+    }
+    return $html;
+}
+
+/** SVG inline minimalista por rede (20×20, stroke 1.5, currentColor). */
+function os_social_icon_svg( $key ) {
+    $svgs = [
+        'instagram' => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.8" fill="currentColor"/></svg>',
+        'youtube'   => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="3"/><polygon points="10,9 16,12 10,15" fill="currentColor" stroke="none"/></svg>',
+        'linkedin'  => '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 8.5v11M6.5 4.5v1M11 19.5v-6.2c0-1.6 1.3-2.8 2.9-2.8s2.6 1 2.6 2.8v6.2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+        'twitter'   => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="4" x2="20" y2="20"/><line x1="20" y1="4" x2="4" y2="20"/></svg>',
+        'telegram'  => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 21 4l-3 16-7-3-3 4v-4z"/><path d="M10 14 21 4"/></svg>',
+        'spotify'   => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M7 10c3-1 7-1 10 1M8 13c2.5-1 5.5-1 8 .5M9 16c2-.5 4-.5 6 .5"/></svg>',
+        'tiktok'    => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11.5a3.5 3.5 0 1 1-3.5-3.5"/><path d="M12 4c.5 2.5 2.5 4 5 4"/></svg>',
+        'facebook'  => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 4h-2a3 3 0 0 0-3 3v3H7v3h2v8h3v-8h3l.5-3H12V7a1 1 0 0 1 1-1h1z"/></svg>',
+        'whatsapp'  => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 20.5 5 16.5A8 8 0 1 1 8 19.5z"/><path d="M8.5 11c.5 2 2.5 4 4.5 4.5l1.5-1.5 2.5 1-.5 2c-4 .5-8-3-8.5-7z"/></svg>',
+        'email'     => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1"/><polyline points="3,7 12,13 21,7"/></svg>',
+        'copy'      => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5h10a1.5 1.5 0 0 1 1.5 1.5v10a1.5 1.5 0 0 1-1.5 1.5H9A1.5 1.5 0 0 1 7.5 15V5A1.5 1.5 0 0 1 9 3.5z"/><path d="M4.5 8V19A1.5 1.5 0 0 0 6 20.5h10"/></svg>',
+    ];
+    return $svgs[ $key ] ?? '';
+}
 
 /**
  * DEBUG: acesse oricksilva.com.br/?brapi_debug=1 logado como admin pra ver status de cada endpoint
