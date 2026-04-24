@@ -92,6 +92,12 @@ $right_q = orick_get_posts_by_tag( 'lateral-hero', 4, post_type_exists( 'ferrame
               <?php echo $is_sponsored ? '● ' : ''; echo esc_html( $kicker ); ?>
             </div>
             <div class="os-small-card-title"><?php the_title(); ?></div>
+            <?php if ( $is_tool ) :
+              $desc = wp_trim_words( get_the_excerpt(), 14, '…' );
+              if ( $desc ) : ?>
+                <div class="os-small-card-desc"><?php echo esc_html( $desc ); ?></div>
+              <?php endif;
+            endif; ?>
           </div>
         </a>
       <?php endwhile; endif; wp_reset_postdata(); ?>

@@ -252,6 +252,17 @@ body.oricksilva button { font-family: inherit; cursor: pointer; border: none; ba
 }
 .os-small-thumb-icon svg { width: 28px; height: 28px; }
 .os-small-card--tool:hover .os-small-thumb-icon { border-color: var(--accent); }
+.os-small-card-desc {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-mute);
+  margin-top: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 .os-small-card-body { display: flex; flex-direction: column; gap: 4px; }
 .os-small-card-cat { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-mute); }
 .os-small-card-cat.sponsored { color: var(--accent); }

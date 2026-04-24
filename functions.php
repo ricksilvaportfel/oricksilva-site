@@ -36,6 +36,10 @@ add_action( 'after_setup_theme', function () {
     add_theme_support( 'title-tag' );
     add_theme_support( 'html5', [ 'search-form', 'gallery', 'caption' ] );
 
+    // Habilita o campo "Ordem" (Atributos do Post) em posts — pra fixar na home
+    // via menu_order. Ferramentas já têm 'page-attributes' no CPT (plugin v1.7.0+).
+    add_post_type_support( 'post', 'page-attributes' );
+
     register_nav_menus( [
         'primary'  => 'Menu principal',
         'subnav'   => 'Sub-navegação (categorias)',
@@ -108,6 +112,9 @@ function orick_get_posts_by_tag( $tag_slug, $limit = 4, $post_types = 'post' ) {
         'posts_per_page' => $limit,
         'tag'            => $tag_slug,
         'ignore_sticky_posts' => true,
+        // menu_order DESC: "Ordem" maior = mais em cima (fixar posts).
+        // menu_order = 0 (padrão) => cai pro date DESC.
+        'orderby'        => [ 'menu_order' => 'DESC', 'date' => 'DESC' ],
     ] );
 }
 function orick_get_posts_by_cat( $cat_slug, $limit = 4 ) {
