@@ -10,7 +10,7 @@ get_header(); ?>
 $lead_q  = orick_get_posts_by_tag( 'destaque', 1 );
 $subs_q  = orick_get_posts_by_tag( 'destaque-secundario', 3 );
 $live_q  = orick_get_posts_by_tag( 'ao-vivo', 4 );
-$right_q = orick_get_posts_by_tag( 'lateral-hero', 4 );
+$right_q = orick_get_posts_by_tag( 'lateral-hero', 4, post_type_exists( 'ferramenta' ) ? [ 'post', 'ferramenta' ] : 'post' );
 ?>
 <section class="os-hero">
   <div class="os-wrap os-hero-grid">
@@ -66,15 +66,30 @@ $right_q = orick_get_posts_by_tag( 'lateral-hero', 4 );
     <!-- RIGHT -->
     <div class="os-right-col">
       <?php if ( $right_q->have_posts() ) : while ( $right_q->have_posts() ) : $right_q->the_post();
-        $is_sponsored = has_tag( 'conteudo-marca' ); ?>
-        <a class="os-small-card" href="<?php the_permalink(); ?>">
+        $is_sponsored = has_tag( 'conteudo-marca' );
+        $is_tool      = get_post_type() === 'ferramenta';
+
+        if ( $is_tool ) {
+            $tool_type = get_post_meta( get_the_ID(), '_orick_tool_type', true ) ?: 'simulador';
+            $icon_svg  = get_post_meta( get_the_ID(), '_orick_tool_icon_svg', true );
+            if ( ! $icon_svg && function_exists( 'oricksilva_default_tool_icon' ) ) {
+                $icon_svg = oricksilva_default_tool_icon( $tool_type );
+            }
+            $kicker = ucfirst( $tool_type );
+        } else {
+            $kicker = orick_first_category_name();
+        }
+        ?>
+        <a class="os-small-card <?php echo $is_tool ? 'os-small-card--tool' : ''; ?>" href="<?php the_permalink(); ?>">
           <div class="os-small-thumb">
-            <?php if ( has_post_thumbnail() ) the_post_thumbnail( 'thumbnail' );
-            else echo '<div class="os-fallback"></div>'; ?>
+            <?php if ( $is_tool && $icon_svg ) : ?>
+              <div class="os-small-thumb-icon"><?php echo $icon_svg; ?></div>
+            <?php elseif ( has_post_thumbnail() ) : the_post_thumbnail( 'thumbnail' );
+            else : echo '<div class="os-fallback"></div>'; endif; ?>
           </div>
           <div class="os-small-card-body">
             <div class="os-small-card-cat <?php echo $is_sponsored ? 'sponsored' : ''; ?>">
-              <?php echo $is_sponsored ? '● ' : ''; echo esc_html( orick_first_category_name() ); ?>
+              <?php echo $is_sponsored ? '● ' : ''; echo esc_html( $kicker ); ?>
             </div>
             <div class="os-small-card-title"><?php the_title(); ?></div>
           </div>

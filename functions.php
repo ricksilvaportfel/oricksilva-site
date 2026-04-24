@@ -102,9 +102,9 @@ add_action( 'after_switch_theme', function () {
 /* =========================================================
    5. HELPERS — QUERIES POR TAG/CATEGORIA
    ========================================================= */
-function orick_get_posts_by_tag( $tag_slug, $limit = 4 ) {
+function orick_get_posts_by_tag( $tag_slug, $limit = 4, $post_types = 'post' ) {
     return new WP_Query( [
-        'post_type'      => 'post',
+        'post_type'      => $post_types,
         'posts_per_page' => $limit,
         'tag'            => $tag_slug,
         'ignore_sticky_posts' => true,

@@ -242,6 +242,16 @@ body.oricksilva button { font-family: inherit; cursor: pointer; border: none; ba
 .os-small-thumb { aspect-ratio: 1 / 1; background: var(--bg-raised); position: relative; overflow: hidden; }
 .os-small-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .os-small-thumb .os-fallback { position: absolute; inset: 0; background: repeating-linear-gradient(45deg, #2a2926 0 6px, #242321 6px 12px); }
+/* Ícone SVG quando o card é de ferramenta (sem imagem destacada) */
+.os-small-thumb-icon {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  background: #1A1A1A;
+  color: var(--accent);
+  border: 1px solid rgba(167,82,50,0.4);
+}
+.os-small-thumb-icon svg { width: 28px; height: 28px; }
+.os-small-card--tool:hover .os-small-thumb-icon { border-color: var(--accent); }
 .os-small-card-body { display: flex; flex-direction: column; gap: 4px; }
 .os-small-card-cat { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-mute); }
 .os-small-card-cat.sponsored { color: var(--accent); }
