@@ -67,25 +67,32 @@ $right_q = orick_get_posts_by_tag( 'lateral-hero', 4 );
     <div class="os-right-col">
       <?php if ( $right_q->have_posts() ) : while ( $right_q->have_posts() ) : $right_q->the_post();
         $is_sponsored = has_tag( 'conteudo-marca' );
-        $is_tool      = get_post_type() === 'ferramenta';
+        $pt           = get_post_type();
+        $is_tool      = $pt === 'ferramenta';
+        $icon_svg     = function_exists( 'oricksilva_lateral_icon_svg' ) ? oricksilva_lateral_icon_svg( get_the_ID() ) : '';
 
+        // Kicker: ferramenta usa o tipo (Simulador/Calculadora/Planejamento), demais usam categoria/CPT.
         if ( $is_tool ) {
             $tool_type = get_post_meta( get_the_ID(), '_orick_tool_type', true ) ?: 'simulador';
-            $icon_svg  = get_post_meta( get_the_ID(), '_orick_tool_icon_svg', true );
-            if ( ! $icon_svg && function_exists( 'oricksilva_default_tool_icon' ) ) {
-                $icon_svg = oricksilva_default_tool_icon( $tool_type );
-            }
-            $kicker = ucfirst( $tool_type );
+            $kicker    = ucfirst( $tool_type );
         } else {
             $kicker = orick_first_category_name();
         }
+        // Ferramenta sempre prioriza o ícone (não tem thumb tipicamente).
+        // Demais CPTs: thumb se existir; ícone como fallback editorial; hachura como último recurso.
+        $show_icon_first = $is_tool;
+        $card_classes    = 'os-small-card';
+        if ( $is_tool )                        $card_classes .= ' os-small-card--tool';
+        if ( $icon_svg && ! has_post_thumbnail() ) $card_classes .= ' os-small-card--icon';
         ?>
-        <a class="os-small-card <?php echo $is_tool ? 'os-small-card--tool' : ''; ?>" href="<?php the_permalink(); ?>">
+        <a class="<?php echo esc_attr( $card_classes ); ?>" href="<?php the_permalink(); ?>">
           <div class="os-small-thumb">
-            <?php if ( $is_tool && $icon_svg ) : ?>
+            <?php if ( $show_icon_first && $icon_svg ) : ?>
               <div class="os-small-thumb-icon"><?php echo $icon_svg; ?></div>
             <?php elseif ( has_post_thumbnail() ) : the_post_thumbnail( 'thumbnail' );
-            else : echo '<div class="os-fallback"></div>'; endif; ?>
+            elseif ( $icon_svg ) : ?>
+              <div class="os-small-thumb-icon"><?php echo $icon_svg; ?></div>
+            <?php else : echo '<div class="os-fallback"></div>'; endif; ?>
           </div>
           <div class="os-small-card-body">
             <div class="os-small-card-cat <?php echo $is_sponsored ? 'sponsored' : ''; ?>">

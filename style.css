@@ -250,8 +250,12 @@ body.oricksilva button { font-family: inherit; cursor: pointer; border: none; ba
   color: var(--accent);
   border: 1px solid rgba(167,82,50,0.4);
 }
-.os-small-thumb-icon svg { width: 28px; height: 28px; }
-.os-small-card--tool:hover .os-small-thumb-icon { border-color: var(--accent); }
+.os-small-thumb-icon svg { width: 28px; height: 28px; transition: transform .25s ease; }
+/* Hover do card com ícone — borda accent + sutil zoom no SVG (vale pra qualquer CPT). */
+.os-small-card--tool:hover .os-small-thumb-icon,
+.os-small-card--icon:hover .os-small-thumb-icon { border-color: var(--accent); }
+.os-small-card--tool:hover .os-small-thumb-icon svg,
+.os-small-card--icon:hover .os-small-thumb-icon svg { transform: scale(1.08); }
 .os-small-card-desc {
   font-family: 'Inter', system-ui, sans-serif;
   font-size: 12px;
