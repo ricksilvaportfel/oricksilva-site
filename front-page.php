@@ -10,7 +10,7 @@ get_header(); ?>
 $lead_q  = orick_get_posts_by_tag( 'destaque', 1 );
 $subs_q  = orick_get_posts_by_tag( 'destaque-secundario', 3 );
 $live_q  = orick_get_posts_by_tag( 'ao-vivo', 4 );
-$right_q = orick_get_posts_by_tag( 'lateral-hero', 4, post_type_exists( 'ferramenta' ) ? [ 'post', 'ferramenta' ] : 'post' );
+$right_q = orick_get_posts_by_tag( 'lateral-hero', 4 );
 ?>
 <section class="os-hero">
   <div class="os-wrap os-hero-grid">
