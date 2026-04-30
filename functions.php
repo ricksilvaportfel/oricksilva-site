@@ -106,7 +106,14 @@ add_action( 'after_switch_theme', function () {
 /* =========================================================
    5. HELPERS — QUERIES POR TAG/CATEGORIA
    ========================================================= */
-function orick_get_posts_by_tag( $tag_slug, $limit = 4, $post_types = 'post' ) {
+function orick_get_posts_by_tag( $tag_slug, $limit = 4, $post_types = null ) {
+    if ( $post_types === null ) {
+        // Default: agrega tudo — post + CPTs do plugin Orick Ferramentas que aceitam post_tag.
+        $post_types = [ 'post' ];
+        foreach ( [ 'ferramenta', 'material', 'video', 'episodio', 'evento' ] as $cpt ) {
+            if ( post_type_exists( $cpt ) ) $post_types[] = $cpt;
+        }
+    }
     return new WP_Query( [
         'post_type'      => $post_types,
         'posts_per_page' => $limit,
@@ -137,7 +144,17 @@ function orick_reading_time( $post_id = null ) {
 }
 function orick_first_category_name( $post_id = null ) {
     $cats = get_the_category( $post_id );
-    return $cats ? $cats[0]->name : 'Artigo';
+    if ( $cats ) return $cats[0]->name;
+    // CPTs do plugin não têm category — usa o singular do post_type como label.
+    $pt = get_post_type( $post_id );
+    $labels = [
+        'ferramenta' => 'Ferramenta',
+        'material'   => 'Material',
+        'video'      => 'Vídeo',
+        'episodio'   => 'Podcast',
+        'evento'     => 'Evento',
+    ];
+    return $labels[ $pt ] ?? 'Artigo';
 }
 function orick_columnist_bio( $user_id ) {
     $bio = get_user_meta( $user_id, 'description', true );
