@@ -10,19 +10,17 @@ get_header(); ?>
 $lead_q  = orick_get_posts_by_tag( 'destaque', 1 );
 $subs_q  = orick_get_posts_by_tag( 'destaque-secundario', 3 );
 /**
- * AO VIVO: força sempre 2 notícias + 2 artigos (4 total).
- * Se faltar de alguma categoria, completa com a outra pra manter 4 cards.
+ * AO VIVO: automático — últimas 2 da categoria 'noticia' + últimas 2 de 'artigos'.
+ * Não depende de tag manual. Se faltar de alguma categoria, completa com a outra.
  */
 $live_args = function( $cat_slug, $n ) {
     return get_posts( [
         'post_type'           => 'post',
         'posts_per_page'      => $n,
-        'tag'                 => 'ao-vivo',
         'category_name'       => $cat_slug,
         'orderby'             => 'date',
         'order'               => 'DESC',
         'ignore_sticky_posts' => true,
-        'suppress_filters'    => false,
     ] );
 };
 $live_noticias = $live_args( 'noticia', 2 );
@@ -93,7 +91,7 @@ $right_q = orick_get_posts_by_tag( 'lateral-hero', 4 );
           <div class="os-hl-meta"><?php echo esc_html( human_time_diff( get_the_time('U'), current_time('timestamp') ) ); ?> atrás · <?php echo esc_html( orick_reading_time() ); ?></div>
         </a>
       <?php endforeach; wp_reset_postdata(); else : ?>
-        <p style="color:var(--text-mute);font-size:12px;padding:20px 0;">Marque posts com a tag <code>ao-vivo</code> nas categorias <code>noticia</code> e <code>artigos</code> para aparecerem aqui.</p>
+        <p style="color:var(--text-mute);font-size:12px;padding:20px 0;">Publique posts nas categorias <code>noticia</code> e <code>artigos</code> — os 2 mais recentes de cada aparecem aqui automaticamente.</p>
       <?php endif; ?>
     </div>
 
