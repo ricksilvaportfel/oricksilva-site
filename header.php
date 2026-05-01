@@ -193,6 +193,32 @@
         }
     }
     ?>
-    <span class="os-subnav-date"><?php echo mb_strtoupper( wp_date( 'D · d M Y · H:i' ) ); ?> BRT</span>
+    <span class="os-subnav-date" id="os-clock-brt"><?php echo mb_strtoupper( wp_date( 'D · d M Y · H:i' ) ); ?> BRT</span>
   </div>
 </div>
+
+<script>
+(function(){
+  var meses = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+  var dias  = ['DOM','SEG','TER','QUA','QUI','SEX','SAB'];
+  var wmap  = {Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
+  function update(){
+    try {
+      var fmt = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/Sao_Paulo',
+        year: 'numeric', month: 'numeric', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', weekday: 'short',
+        hour12: false
+      });
+      var p = {};
+      fmt.formatToParts(new Date()).forEach(function(x){ p[x.type] = x.value; });
+      var hh = p.hour === '24' ? '00' : p.hour;
+      var txt = dias[wmap[p.weekday] !== undefined ? wmap[p.weekday] : 0] + ' · ' + p.day + ' ' + (meses[parseInt(p.month,10)-1] || '') + ' ' + p.year + ' · ' + hh + ':' + p.minute + ' BRT';
+      var el = document.getElementById('os-clock-brt');
+      if (el) el.textContent = txt;
+    } catch(e) { /* fallback: deixa o que o PHP renderizou */ }
+  }
+  update();
+  setInterval(update, 30000);
+})();
+</script>
