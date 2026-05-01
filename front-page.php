@@ -9,7 +9,41 @@ get_header(); ?>
 /* ---------- HERO ---------- */
 $lead_q  = orick_get_posts_by_tag( 'destaque', 1 );
 $subs_q  = orick_get_posts_by_tag( 'destaque-secundario', 3 );
-$live_q  = orick_get_posts_by_tag( 'ao-vivo', 4 );
+/**
+ * AO VIVO: força sempre 2 notícias + 2 artigos (4 total).
+ * Se faltar de alguma categoria, completa com a outra pra manter 4 cards.
+ */
+$live_args = function( $cat_slug, $n ) {
+    return get_posts( [
+        'post_type'           => 'post',
+        'posts_per_page'      => $n,
+        'tag'                 => 'ao-vivo',
+        'category_name'       => $cat_slug,
+        'orderby'             => 'date',
+        'order'               => 'DESC',
+        'ignore_sticky_posts' => true,
+        'suppress_filters'    => false,
+    ] );
+};
+$live_noticias = $live_args( 'noticia', 2 );
+$live_artigos  = $live_args( 'artigos', 2 );
+
+// Completa pra sempre somar 4
+$faltam = 4 - count( $live_noticias ) - count( $live_artigos );
+if ( $faltam > 0 ) {
+    if ( count( $live_noticias ) < 2 ) {
+        $live_artigos = $live_args( 'artigos', count( $live_artigos ) + $faltam );
+    } elseif ( count( $live_artigos ) < 2 ) {
+        $live_noticias = $live_args( 'noticia', count( $live_noticias ) + $faltam );
+    }
+}
+
+// Mistura pra ordem cronológica decrescente (mais recente primeiro)
+$live_posts = array_merge( $live_noticias, $live_artigos );
+usort( $live_posts, function( $a, $b ) {
+    return strtotime( $b->post_date ) - strtotime( $a->post_date );
+} );
+$live_posts = array_slice( $live_posts, 0, 4 );
 $right_q = orick_get_posts_by_tag( 'lateral-hero', 4 );
 ?>
 <section class="os-hero">
@@ -52,15 +86,15 @@ $right_q = orick_get_posts_by_tag( 'lateral-hero', 4 );
         <span class="os-mid-head-title">AO VIVO</span>
         <span class="os-mid-head-time">Última atualização · <?php echo wp_date('H:i'); ?></span>
       </div>
-      <?php if ( $live_q->have_posts() ) : while ( $live_q->have_posts() ) : $live_q->the_post(); ?>
+      <?php if ( $live_posts ) : foreach ( $live_posts as $live_post ) : setup_postdata( $GLOBALS['post'] = $live_post ); ?>
         <a class="os-hl-item" href="<?php the_permalink(); ?>">
           <div class="os-kicker"><?php echo esc_html( mb_strtoupper( orick_first_category_name() ) ); ?></div>
           <div class="os-hl-title"><?php the_title(); ?></div>
           <div class="os-hl-meta"><?php echo esc_html( human_time_diff( get_the_time('U'), current_time('timestamp') ) ); ?> atrás · <?php echo esc_html( orick_reading_time() ); ?></div>
         </a>
-      <?php endwhile; else : ?>
-        <p style="color:var(--text-mute);font-size:12px;padding:20px 0;">Marque posts com a tag <code>ao-vivo</code> para aparecerem aqui.</p>
-      <?php endif; wp_reset_postdata(); ?>
+      <?php endforeach; wp_reset_postdata(); else : ?>
+        <p style="color:var(--text-mute);font-size:12px;padding:20px 0;">Marque posts com a tag <code>ao-vivo</code> nas categorias <code>noticia</code> e <code>artigos</code> para aparecerem aqui.</p>
+      <?php endif; ?>
     </div>
 
     <!-- RIGHT -->
