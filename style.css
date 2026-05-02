@@ -31,7 +31,13 @@ Text Domain:  oricksilva
    RESET / BASE
    =========================== */
 *, *::before, *::after { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; }
+html, body { margin: 0; padding: 0; overflow-x: hidden; }
+body.oricksilva img, body.oricksilva svg, body.oricksilva iframe { max-width: 100%; }
+/* Filhos de grid/flex não devem aumentar a célula com texto longo */
+body.oricksilva .os-card, body.oricksilva .tool-card, body.oricksilva .event-card,
+body.oricksilva .os-card-body, body.oricksilva .tool-card-top, body.oricksilva .event-card-top { min-width: 0; }
+body.oricksilva .os-card-title, body.oricksilva .tool-title, body.oricksilva .event-title,
+body.oricksilva .os-podcast-item-title, body.oricksilva .os-podcast-hero-title { overflow-wrap: anywhere; }
 body.oricksilva {
   background: var(--bg);
   color: var(--text);
