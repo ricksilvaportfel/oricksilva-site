@@ -643,7 +643,17 @@ body.oricksilva .os-mkt-foot {
 @media (max-width: 720px) {
   .os-wrap { padding: 0 20px; }
   .os-hero-grid { grid-template-columns: 1fr; }
-  .os-right-col { flex-direction: column; }
+  /* Lateral hero: 1 card por linha, mata o flex-basis 50% herdado do breakpoint 1100 */
+  .os-right-col {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 14px;
+  }
+  .os-right-col .os-small-card {
+    flex: 0 0 auto;
+    width: 100%;
+  }
   .os-market-grid { grid-template-columns: 1fr; }
   .os-cards-grid { grid-template-columns: 1fr; }
   .os-col-grid { grid-template-columns: 1fr; }
