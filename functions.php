@@ -709,6 +709,47 @@ add_action( 'wp_footer', function() {
     <?php
 }, 99 );
 
+/* =========================================================
+   NEWSLETTER — Inscrição via MailPoet
+   ========================================================= */
+add_action( 'template_redirect', function () {
+    if ( empty( $_POST['os_action'] ) || $_POST['os_action'] !== 'newsletter_subscribe' ) return;
+    if ( ! wp_verify_nonce( $_POST['_os_nonce'] ?? '', 'os_newsletter_sub' ) ) {
+        wp_safe_redirect( add_query_arg( 'ns', 'fail', home_url( '/' ) ) . '#newsletter' );
+        exit;
+    }
+
+    $email = sanitize_email( $_POST['email'] ?? '' );
+    if ( ! $email || ! is_email( $email ) ) {
+        wp_safe_redirect( add_query_arg( 'ns', 'empty', home_url( '/' ) ) . '#newsletter' );
+        exit;
+    }
+
+    // MailPoet PHP API
+    if ( ! class_exists( \MailPoet\API\API::class ) ) {
+        wp_safe_redirect( add_query_arg( 'ns', 'fail', home_url( '/' ) ) . '#newsletter' );
+        exit;
+    }
+
+    $mailpoet = \MailPoet\API\API::MP( 'v1' );
+    $list_id  = 3; // "Lista de e-mails" criada pelo MailPoet
+
+    try {
+        $subscriber = $mailpoet->addSubscriber(
+            [ 'email' => $email, 'status' => 'subscribed' ],
+            [ $list_id ]
+        );
+        $code = 'ok';
+    } catch ( \Exception $e ) {
+        $code = ( strpos( $e->getMessage(), 'already exists' ) !== false
+              || strpos( $e->getMessage(), 'já existe' )       !== false )
+            ? 'exist' : 'fail';
+    }
+
+    wp_safe_redirect( add_query_arg( 'ns', $code, home_url( '/' ) ) . '#newsletter' );
+    exit;
+} );
+
 add_action( 'wp_ajax_oricksilva_load_more', 'oricksilva_ajax_load_more' );
 add_action( 'wp_ajax_nopriv_oricksilva_load_more', 'oricksilva_ajax_load_more' );
 function oricksilva_ajax_load_more() {

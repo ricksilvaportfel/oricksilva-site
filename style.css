@@ -598,6 +598,11 @@ body.oricksilva .os-mkt-foot {
   padding: 0 24px; background: var(--accent); color: #fff;
   font-weight: 500; font-size: 13px; letter-spacing: 0.04em; cursor: pointer;
 }
+.os-newsletter-msg {
+  margin: 12px auto 0; font-size: 14px; max-width: 480px;
+}
+.os-newsletter-ok { color: #6fcf97; }
+.os-newsletter-err { color: #f2994a; }
 
 /* ===========================
    FOOTER

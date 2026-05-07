@@ -6,10 +6,25 @@
       <div class="os-label">Newsletter gratuita · Toda segunda, 07:00</div>
       <h2>Uma leitura de <em>12 minutos</em> que substitui metade das suas reuniões da semana.</h2>
       <p>Análise, táticas de prospecção, e os bastidores de quem fechou muito na semana. Sem lorota, sem vender curso no meio.</p>
-      <form class="os-newsletter-form" action="#" method="post">
+      <form class="os-newsletter-form" method="post">
+        <?php wp_nonce_field( 'os_newsletter_sub', '_os_nonce' ); ?>
+        <input type="hidden" name="os_action" value="newsletter_subscribe">
         <input type="email" name="email" placeholder="seu@email.com" required>
         <button type="submit">Assinar grátis →</button>
       </form>
+      <?php if ( ! empty( $_GET['ns'] ) ) : ?>
+        <p class="os-newsletter-msg os-newsletter-<?php echo $_GET['ns'] === 'ok' ? 'ok' : 'err'; ?>">
+          <?php
+          $ns_msgs = [
+            'ok'    => 'Pronto! Você está na lista. 🎯',
+            'exist' => 'Esse e-mail já está cadastrado.',
+            'fail'  => 'Algo deu errado. Tente novamente.',
+            'empty' => 'Preencha seu e-mail.',
+          ];
+          echo esc_html( $ns_msgs[ $_GET['ns'] ] ?? $ns_msgs['fail'] );
+          ?>
+        </p>
+      <?php endif; ?>
     </div>
 
     <div class="os-footer-grid">
