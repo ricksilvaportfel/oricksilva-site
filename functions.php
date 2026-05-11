@@ -750,6 +750,78 @@ add_action( 'template_redirect', function () {
     exit;
 } );
 
+/* =========================================================
+   NEWSLETTER — Endpoint REST para envio via MailPoet
+   POST /wp-json/orick/v1/newsletter/send
+   Body: { "subject": "...", "html": "...", "list_id": 3 }
+   ========================================================= */
+add_action( 'rest_api_init', function () {
+    register_rest_route( 'orick/v1', '/newsletter/send', [
+        'methods'             => 'POST',
+        'callback'            => 'orick_newsletter_send',
+        'permission_callback' => function () {
+            return current_user_can( 'edit_posts' );
+        },
+    ] );
+} );
+
+function orick_newsletter_send( WP_REST_Request $request ) {
+    $subject = sanitize_text_field( $request->get_param( 'subject' ) );
+    $html    = $request->get_param( 'html' );
+    $list_id = intval( $request->get_param( 'list_id' ) ?: 3 );
+
+    if ( empty( $subject ) || empty( $html ) ) {
+        return new WP_REST_Response( [
+            'success' => false,
+            'error'   => 'subject e html sao obrigatorios',
+        ], 400 );
+    }
+
+    if ( ! class_exists( \MailPoet\API\API::class ) ) {
+        return new WP_REST_Response( [
+            'success' => false,
+            'error'   => 'MailPoet nao esta ativo',
+        ], 500 );
+    }
+
+    try {
+        $mailpoet = \MailPoet\API\API::MP( 'v1' );
+
+        $newsletter = $mailpoet->addNewsletter( [
+            'subject' => $subject,
+            'type'    => 'standard',
+            'body'    => [
+                'content' => [
+                    'type'         => 'container',
+                    'columnLayout' => false,
+                    'orientation'  => 'vertical',
+                    'blocks'       => [
+                        [ 'type' => 'html', 'html' => $html ],
+                    ],
+                ],
+            ],
+        ] );
+
+        $newsletter_id = $newsletter['id'] ?? null;
+        if ( ! $newsletter_id ) {
+            return new WP_REST_Response( [ 'success' => false, 'error' => 'Falha ao criar newsletter' ], 500 );
+        }
+
+        $mailpoet->addNewsletterToLists( $newsletter_id, [ $list_id ] );
+        $mailpoet->sendNewsletter( $newsletter_id );
+
+        return new WP_REST_Response( [
+            'success'       => true,
+            'newsletter_id' => $newsletter_id,
+            'subject'       => $subject,
+            'list_id'       => $list_id,
+        ], 200 );
+
+    } catch ( \Exception $e ) {
+        return new WP_REST_Response( [ 'success' => false, 'error' => $e->getMessage() ], 500 );
+    }
+}
+
 add_action( 'wp_ajax_oricksilva_load_more', 'oricksilva_ajax_load_more' );
 add_action( 'wp_ajax_nopriv_oricksilva_load_more', 'oricksilva_ajax_load_more' );
 function oricksilva_ajax_load_more() {
