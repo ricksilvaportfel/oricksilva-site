@@ -769,6 +769,7 @@ function orick_newsletter_send( WP_REST_Request $request ) {
     $subject = sanitize_text_field( $request->get_param( 'subject' ) );
     $html    = $request->get_param( 'html' );
     $list_id = intval( $request->get_param( 'list_id' ) ?: 3 );
+    $to      = sanitize_email( $request->get_param( 'to' ) );
 
     if ( empty( $subject ) || empty( $html ) ) {
         return new WP_REST_Response( [
@@ -786,35 +787,59 @@ function orick_newsletter_send( WP_REST_Request $request ) {
 
     try {
         $mailpoet = \MailPoet\API\API::MP( 'v1' );
+        $headers  = [ 'Content-Type: text/html; charset=UTF-8' ];
 
-        $newsletter = $mailpoet->addNewsletter( [
-            'subject' => $subject,
-            'type'    => 'standard',
-            'body'    => [
-                'content' => [
-                    'type'         => 'container',
-                    'columnLayout' => false,
-                    'orientation'  => 'vertical',
-                    'blocks'       => [
-                        [ 'type' => 'html', 'html' => $html ],
-                    ],
-                ],
-            ],
-        ] );
-
-        $newsletter_id = $newsletter['id'] ?? null;
-        if ( ! $newsletter_id ) {
-            return new WP_REST_Response( [ 'success' => false, 'error' => 'Falha ao criar newsletter' ], 500 );
+        // Se "to" foi passado, envia só para esse email (teste)
+        if ( $to ) {
+            $sent = wp_mail( $to, $subject, $html, $headers );
+            return new WP_REST_Response( [
+                'success' => $sent,
+                'mode'    => 'test',
+                'to'      => $to,
+                'subject' => $subject,
+            ], $sent ? 200 : 500 );
         }
 
-        $mailpoet->addNewsletterToLists( $newsletter_id, [ $list_id ] );
-        $mailpoet->sendNewsletter( $newsletter_id );
+        // Envio para a lista inteira via MailPoet
+        $subscribers = $mailpoet->getSubscribers( [
+            'listId' => $list_id,
+            'status' => 'subscribed',
+            'limit'  => 5000,
+        ] );
+
+        $sent_count = 0;
+        $errors     = [];
+
+        foreach ( $subscribers as $sub ) {
+            $email = $sub['email'] ?? '';
+            if ( ! $email ) continue;
+
+            $personalized = str_replace(
+                '[mailpoet_unsubscribe]',
+                home_url( '/?mailpoet_page=unsubscribe&email=' . urlencode( $email ) ),
+                $html
+            );
+            $personalized = str_replace(
+                '[mailpoet_manage_subscription]',
+                home_url( '/?mailpoet_page=manage&email=' . urlencode( $email ) ),
+                $personalized
+            );
+
+            $ok = wp_mail( $email, $subject, $personalized, $headers );
+            if ( $ok ) {
+                $sent_count++;
+            } else {
+                $errors[] = $email;
+            }
+        }
 
         return new WP_REST_Response( [
-            'success'       => true,
-            'newsletter_id' => $newsletter_id,
-            'subject'       => $subject,
-            'list_id'       => $list_id,
+            'success'    => $sent_count > 0,
+            'mode'       => 'broadcast',
+            'sent_count' => $sent_count,
+            'errors'     => $errors,
+            'list_id'    => $list_id,
+            'subject'    => $subject,
         ], 200 );
 
     } catch ( \Exception $e ) {
